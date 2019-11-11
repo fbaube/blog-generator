@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/zupzup/blog-generator/cli"
+	"github.com/fbaube/blog-generator/cli"
 )
 
 func main() {

@@ -6,9 +6,9 @@ import (
 	"io/ioutil"
 	"log"
 
-	"github.com/zupzup/blog-generator/config"
-	"github.com/zupzup/blog-generator/datasource"
-	"github.com/zupzup/blog-generator/generator"
+	"github.com/fbaube/blog-generator/config"
+	"github.com/fbaube/blog-generator/datasource"
+	"github.com/fbaube/blog-generator/generator"
 )
 
 // Run runs the application

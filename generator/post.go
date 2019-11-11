@@ -8,7 +8,8 @@ import (
 	"github.com/alecthomas/chroma/formatters/html"
 	"github.com/alecthomas/chroma/lexers"
 	"github.com/alecthomas/chroma/styles"
-	"github.com/russross/blackfriday"
+	// "github.com/russross/blackfriday"
+	"github.com/yuin/goldmark"
 	"gopkg.in/yaml.v2"
 	"html/template"
 	"io/ioutil"
@@ -128,10 +129,17 @@ func getHTML(path string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error while reading file %s: %v", filePath, err)
 	}
-	html := blackfriday.MarkdownCommon(input)
-	replaced, err := replaceCodeParts(html)
+
+	// Replace BlackFriday with Goldmark
+	// html := blackfriday.MarkdownCommon(input)
+	var htmlBuf bytes.Buffer
+	if err := goldmark.Convert(input, &htmlBuf); err != nil {
+  	panic(err)
+	}
+  html2 := []byte(htmlBuf.String())
+	replaced, err := replaceCodeParts(html2)
 	if err != nil {
-		return nil, fmt.Errorf("error during syntax highlighting of %s: %v", filePath, err)
+		return nil, fmt.Errorf("error during syntax hiliting of %s: %v", filePath, err)
 	}
 	return []byte(replaced), nil
 
