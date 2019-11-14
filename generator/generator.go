@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-// Meta is a data container for Metadata
+// Meta is a data container for per-post Metadata in a "meta.yaml".
 type Meta struct {
 	Title      string
 	Short      string
@@ -25,7 +25,7 @@ type Meta struct {
 	ParsedDate time.Time
 }
 
-// IndexData is a data container for the landing page
+// IndexData is a data container for the landing page.
 type IndexData struct {
 	HTMLTitle       string
 	PageTitle       string
@@ -54,12 +54,12 @@ type SiteConfig struct {
 	Config      *config.Config
 }
 
-// New creates a new SiteGenerator
+// New creates a new SiteGenerator.
 func New(config *SiteConfig) *SiteGenerator {
 	return &SiteGenerator{Config: config}
 }
 
-// Generate starts the static blog generation
+// Generate starts the static blog generation.
 func (g *SiteGenerator) Generate() error {
 	templatePath := filepath.Join("static", "template.html")
 	fmt.Println("Generating Site...")
@@ -218,7 +218,7 @@ func clearAndCreateDestination(path string) error {
 	return os.Mkdir(path, os.ModePerm)
 }
 
-// IndexWriter writer index.html files
+// IndexWriter writes index.html files.
 type IndexWriter struct {
 	BlogTitle       string
 	BlogDescription string
@@ -226,7 +226,7 @@ type IndexWriter struct {
 	BlogURL         string
 }
 
-// WriteIndexHTML writes an index.html file
+// WriteIndexHTML writes an index.html file. 
 func (i *IndexWriter) WriteIndexHTML(path, pageTitle, metaDescription string, content template.HTML, t *template.Template) error {
 	filePath := filepath.Join(path, "index.html")
 	f, err := os.Create(filePath)

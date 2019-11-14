@@ -11,10 +11,10 @@ import (
 	// FU "github.com/fbaube/fileutils"
 )
 
-// FileSystemDataSource is the file system data source object
+// FileSystemDataSource is the file system data source object.
 type FileSystemDataSource struct{}
 
-// Fetch creates the output folder, clears it and clones the repository there
+// Fetch creates the output folder, clears it and copies the repository there.
 func (ds *FileSystemDataSource) Fetch(from, to string) ([]string, error) {
 	if S.Contains(from, "://") && !S.HasPrefix(from, "file://") {
 		panic("bad protocol: " + from)
@@ -63,7 +63,7 @@ func cloneFileDir(pathTo string, repoFrom string) error {
 	return b
 }
 
-// CopyDirRecursively copies a whole directory recursively.
+// CopyDirRecursivelyFromTo copies a whole directory recursively.
 // Both argument should be directories !!
 func CopyDirRecursivelyFromTo(srcFrom string, dstTo string) error {
 	var err error
@@ -91,7 +91,7 @@ func CopyDirRecursivelyFromTo(srcFrom string, dstTo string) error {
 				fmt.Println(err)
 			}
 		} else {
-			if err = CopyFile(srcfp, dstfp); err != nil {
+			if err = CopyFileFromTo(srcfp, dstfp); err != nil {
 				fmt.Println(err)
 			}
 		}
@@ -99,8 +99,8 @@ func CopyDirRecursivelyFromTo(srcFrom string, dstTo string) error {
 	return nil
 }
 
-// File copies a single file from src to dst
-func CopyFile(src, dst string) error {
+// CopyFileFromTo copies a single file from src to dst.
+func CopyFileFromTo(src, dst string) error {
 	var err error
 	var srcfd *os.File
 	var dstfd *os.File

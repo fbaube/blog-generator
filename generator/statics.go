@@ -15,7 +15,7 @@ type StaticsGenerator struct {
 	Config *StaticsConfig
 }
 
-// StaticsConfig holds the data for the static sites
+// StaticsConfig holds the data for the static sites.
 type StaticsConfig struct {
 	FileToDestination map[string]string
 	TemplateToFile    map[string]string
@@ -23,7 +23,7 @@ type StaticsConfig struct {
 	Writer            *IndexWriter
 }
 
-// Generate creates the static pages
+// Generate creates the static pages.
 func (g *StaticsGenerator) Generate() error {
 	fmt.Println("\tCopying Statics...")
 	fileToDestination := g.Config.FileToDestination

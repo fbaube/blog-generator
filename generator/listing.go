@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// ListingData holds the data for the listing page
+// ListingData holds the data for the listing page.
 type ListingData struct {
 	Title      string
 	Date       string
@@ -23,7 +23,7 @@ type ListingGenerator struct {
 	Config *ListingConfig
 }
 
-// ListingConfig holds the configuration for the listing page
+// ListingConfig holds the configuration for the listing page.
 type ListingConfig struct {
 	Posts                  []*Post
 	Template               *template.Template
@@ -32,7 +32,7 @@ type ListingConfig struct {
 	Writer                 *IndexWriter
 }
 
-// Generate starts the listing generation
+// Generate starts the listing generation.
 func (g *ListingGenerator) Generate() error {
 	shortTemplatePath := filepath.Join("static", "short.html")
 	archiveLinkTemplatePath := filepath.Join("static", "archiveLink.html")

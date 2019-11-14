@@ -9,14 +9,14 @@ import (
 	"strings"
 )
 
-// Tag holds the data for a Tag
+// Tag holds the data for a Tag.
 type Tag struct {
 	Name  string
 	Link  string
 	Count int
 }
 
-// ByCountDesc sorts the tags
+// ByCountDesc sorts the tags.
 type ByCountDesc []*Tag
 
 // TagsGenerator object
@@ -24,7 +24,7 @@ type TagsGenerator struct {
 	Config *TagsConfig
 }
 
-// TagsConfig holds the tag's config
+// TagsConfig holds the tag's config.
 type TagsConfig struct {
 	TagPostsMap map[string][]*Post
 	Template    *template.Template
@@ -32,7 +32,7 @@ type TagsConfig struct {
 	Writer      *IndexWriter
 }
 
-// Generate creates the tags page
+// Generate creates the tags page.
 func (g *TagsGenerator) Generate() error {
 	fmt.Println("\tGenerating Tags...")
 	tagPostsMap := g.Config.TagPostsMap

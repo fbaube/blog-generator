@@ -12,7 +12,7 @@ type SitemapGenerator struct {
 	Config *SitemapConfig
 }
 
-// SitemapConfig holds the config for the sitemap
+// SitemapConfig holds the config for the sitemap.
 type SitemapConfig struct {
 	Posts       []*Post
 	TagPostsMap map[string][]*Post
@@ -21,7 +21,7 @@ type SitemapConfig struct {
 	Statics     []string
 }
 
-// Generate creates the sitemap
+// Generate creates the sitemap.
 func (g *SitemapGenerator) Generate() error {
 	fmt.Println("\tGenerating Sitemap...")
 	posts := g.Config.Posts
@@ -46,7 +46,6 @@ func (g *SitemapGenerator) Generate() error {
 	for tag := range tagPostsMap {
 		addURL(urlSet, tag, g.Config.BlogURL, nil)
 	}
-
 	for _, post := range posts {
 		addURL(urlSet, post.Name[1:], g.Config.BlogURL, post.Images)
 	}

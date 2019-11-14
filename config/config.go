@@ -1,6 +1,6 @@
 package config
 
-// Config is the configuration of the blog-generator
+// Config is the configuration of the blog-generator.
 type Config struct {
 	Generator struct {
 		Repo string

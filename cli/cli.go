@@ -13,11 +13,11 @@ import (
 	"github.com/fbaube/blog-generator/generator"
 )
 
-// Run runs the application
+// Run runs the application. Amaze!
 func Run() {
 	cfg, err := readConfig()
 	if err != nil {
-		log.Fatal("There was an error while reading the configuration file: ", err)
+		log.Fatal("Can't read configuration file: ", err)
 	}
 	var dstype string
 	var repo string
@@ -28,7 +28,7 @@ func Run() {
 		fmt.Printf("Repo protocol is %s... \n", repo[:idxProtocol+3])
 		dstype = "git"
 	} else if S.HasPrefix(repo, "file://") || path.IsAbs(repo) {
-		fmt.Printf("Repo is directory... \n")
+		fmt.Printf("Repo is a directory... \n")
 		dstype = "filesystem"
 	} else {
 		log.Fatal(fmt.Errorf("unknown protocol: %s", repo))
@@ -75,14 +75,14 @@ func Run() {
 func readConfig() (*config.Config, error) {
 	data, err := ioutil.ReadFile("bloggen.yml")
 	if err != nil {
-		return nil, fmt.Errorf("could not read config file: %v", err)
+		return nil, fmt.Errorf("Can't read config file: %w", err)
 	}
 	cfg := config.Config{}
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("could not parse config: %v", err)
+		return nil, fmt.Errorf("Can't parse config: %w", err)
 	}
 	if cfg.Generator.Repo == "" {
-		return nil, fmt.Errorf("Please provide a repository URL, e.g.: https://github.com/zupzup/blog")
+		return nil, fmt.Errorf("Provide a repository URL: a directory filepath or http[s]")
 	}
 	if cfg.Generator.Tmp == "" {
 		cfg.Generator.Tmp = "tmp"
@@ -97,16 +97,16 @@ func readConfig() (*config.Config, error) {
 		cfg.Blog.Language = "en-us"
 	}
 	if cfg.Blog.Description == "" {
-		return nil, fmt.Errorf("Please provide a Blog Description, e.g.: A blog about Go, JavaScript, Open Source and Programming in General")
+		return nil, fmt.Errorf("Provide a Blog Description, e.g.: A blog about blogging")
 	}
 	if cfg.Blog.Dateformat == "" {
 		cfg.Blog.Dateformat = "02.01.2006"
 	}
 	if cfg.Blog.Title == "" {
-		return nil, fmt.Errorf("Please provide a Blog Title, e.g.: zupzup")
+		return nil, fmt.Errorf("Provide a Blog Title, e.g.: wuzzup")
 	}
 	if cfg.Blog.Author == "" {
-		return nil, fmt.Errorf("Please provide a Blog author, e.g.: Mario Zupan")
+		return nil, fmt.Errorf("Provide a Blog author, e.g.: Joe Blow")
 	}
 	if cfg.Blog.Frontpageposts == 0 {
 		cfg.Blog.Frontpageposts = 10

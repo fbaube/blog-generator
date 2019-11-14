@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-// Post holds data for a post
+// Post holds data for a post.
 type Post struct {
 	Name      string
 	HTML      []byte
@@ -28,7 +28,7 @@ type Post struct {
 	Images    []string
 }
 
-// ByDateDesc is the sorting object for posts
+// ByDateDesc is the sorting object for posts.
 type ByDateDesc []*Post
 
 // PostGenerator object
@@ -36,7 +36,7 @@ type PostGenerator struct {
 	Config *PostConfig
 }
 
-// PostConfig holds the post's configuration
+// PostConfig holds the post's configuration.
 type PostConfig struct {
 	Post        *Post
 	Destination string
@@ -44,7 +44,7 @@ type PostConfig struct {
 	Writer      *IndexWriter
 }
 
-// Generate generates a post
+// Generate generates a post.
 func (g *PostGenerator) Generate() error {
 	post := g.Config.Post
 	destination := g.Config.Destination
@@ -59,7 +59,6 @@ func (g *PostGenerator) Generate() error {
 			return err
 		}
 	}
-
 	if err := g.Config.Writer.WriteIndexHTML(staticPath, post.Meta.Title, post.Meta.Short, template.HTML(string(post.HTML)), t); err != nil {
 		return err
 	}
