@@ -5,7 +5,9 @@ import (
 	yaml "gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
-
+	S "strings"
+	"path"
+	FU "github.com/fbaube/fileutils"
 	"github.com/fbaube/blog-generator/config"
 	"github.com/fbaube/blog-generator/datasource"
 	"github.com/fbaube/blog-generator/generator"
@@ -17,13 +19,46 @@ func Run() {
 	if err != nil {
 		log.Fatal("There was an error while reading the configuration file: ", err)
 	}
-	ds := datasource.New()
-	dirs, err := ds.Fetch(cfg.Generator.Repo, cfg.Generator.Tmp)
-
+	var dstype string
+	var repo string
+	repo = cfg.Generator.Repo
+	hasProtocol := S.Contains(repo, "://")
+	idxProtocol := S.Index(repo, "://")
+	if hasProtocol && S.HasPrefix(repo, "http") {
+		fmt.Printf("Repo protocol is %s... \n", repo[:idxProtocol+3])
+		dstype = "git"
+	} else if S.HasPrefix(repo, "file://") || path.IsAbs(repo) {
+		fmt.Printf("Repo is directory... \n")
+		dstype = "filesystem"
+	} else {
+		log.Fatal(fmt.Errorf("unknown protocol: %s", repo))
+	}
+	// Check that arguments are OK
+	var chp_tmpTo, chp_repo *FU.CheckedPath
+  var tmpTo string
+	tmpTo = cfg.Generator.Tmp
+	chp_tmpTo = FU.NewCheckedPath(tmpTo)
+	if chp_tmpTo.Exists && !chp_tmpTo.IsDir {
+		log.Fatal(fmt.Errorf("\"Tmp\" is not a directory: <%s>", tmpTo))
+	}
+	if dstype == "filesystem" {
+		chp_repo = FU.NewCheckedPath(repo)
+		if !(chp_repo.Exists && chp_repo.IsDir) {
+			log.Fatal(fmt.Errorf("HTTP Repo is not a directory: <%s>", repo))
+		}
+	}
+	ds := datasource.New(dstype)
+	var dirs []string
+	// Fetch(from, to string)
+	switch dstype {
+	case "git":
+		dirs, err = ds.Fetch(cfg.Generator.Repo, cfg.Generator.Tmp)
+	case "filesystem":
+		dirs, err = ds.Fetch(chp_repo.AbsFilePath.S(), chp_tmpTo.AbsFilePath.S())
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	g := generator.New(&generator.SiteConfig{
 		Sources:     dirs,
 		Destination: cfg.Generator.Dest,
