@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/alecthomas/chroma/formatters/html"
 	"github.com/alecthomas/chroma/styles"
-	"github.com/fbaube/blog-generator/config"
+	"github.com/fbaube/bloggenator/config"
 	"html/template"
 	"os"
 	"path/filepath"

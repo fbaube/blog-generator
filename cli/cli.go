@@ -8,9 +8,9 @@ import (
 	S "strings"
 	"path"
 	FU "github.com/fbaube/fileutils"
-	"github.com/fbaube/blog-generator/config"
-	"github.com/fbaube/blog-generator/datasource"
-	"github.com/fbaube/blog-generator/generator"
+	"github.com/fbaube/bloggenator/config"
+	"github.com/fbaube/bloggenator/datasource"
+	"github.com/fbaube/bloggenator/generator"
 )
 
 // Run runs the application. Amaze!
