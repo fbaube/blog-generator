@@ -17,17 +17,16 @@ type StaticsGenerator struct {
 
 // StaticsConfig holds the data for the static sites.
 type StaticsConfig struct {
-	FileToDestination map[string]string
-	TemplateToFile    map[string]string
-	Template          *template.Template
-	Writer            *IndexWriter
+	FilesToDests map[string]string
+	TmplsToFiles map[string]string
+	BaseConfig // NOTE that field Dest is not used
 }
 
 // Generate creates the static pages.
 func (g *StaticsGenerator) Generate() error {
 	fmt.Println("\tCopying Statics...")
-	fileToDestination := g.Config.FileToDestination
-	templateToFile := g.Config.TemplateToFile
+	fileToDestination := g.Config.FilesToDests
+	templateToFile := g.Config.TmplsToFiles
 	t := g.Config.Template
 	for k, v := range fileToDestination {
 		if err := createFolderIfNotExist(getFolder(v)); err != nil {
@@ -45,7 +44,7 @@ func (g *StaticsGenerator) Generate() error {
 		if err != nil {
 			return fmt.Errorf("error reading file %s: %v", k, err)
 		}
-		if err := g.Config.Writer.WriteIndexHTML(getFolder(v), getTitle(k), getTitle(k), template.HTML(content), t); err != nil {
+		if err := g.Config.IndexWriter.WriteIndexHTML(getFolder(v), getTitle(k), getTitle(k), template.HTML(content), t); err != nil {
 			return err
 		}
 	}

@@ -25,11 +25,15 @@ type ListingGenerator struct {
 
 // ListingConfig holds the configuration for the listing page.
 type ListingConfig struct {
-	Posts                  []*Post
-	Template               *template.Template
-	Destination, PageTitle string
-	IsIndex                bool
-	Writer                 *IndexWriter
+	Posts  []*Post
+	PageTitle string
+	IsIndex   bool
+	BaseConfig
+}
+
+func (pLC *ListingConfig) String() string {
+	return fmt.Sprintf("ListCfg: %s; \n\t PgTtl<%s> IsIdx?<%t> Posts: %+v",
+			pLC.BaseConfig.String(), pLC.PageTitle, pLC.IsIndex, pLC.Posts)
 }
 
 // Generate starts the listing generation.
@@ -38,7 +42,7 @@ func (g *ListingGenerator) Generate() error {
 	archiveLinkTemplatePath := filepath.Join("static", "archiveLink.html")
 	posts := g.Config.Posts
 	t := g.Config.Template
-	destination := g.Config.Destination
+	destination := g.Config.Dest
 	pageTitle := g.Config.PageTitle
 	short, err := getTemplate(shortTemplatePath)
 	if err != nil {
@@ -74,7 +78,7 @@ func (g *ListingGenerator) Generate() error {
 		}
 		htmlBlocks = template.HTML(fmt.Sprintf("%s%s", htmlBlocks, template.HTML(lastBlock.String())))
 	}
-	if err := g.Config.Writer.WriteIndexHTML(destination, pageTitle, pageTitle, htmlBlocks, t); err != nil {
+	if err := g.Config.IndexWriter.WriteIndexHTML(destination, pageTitle, pageTitle, htmlBlocks, t); err != nil {
 		return err
 	}
 	return nil

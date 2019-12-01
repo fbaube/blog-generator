@@ -2,26 +2,25 @@ package cli
 
 import (
 	"fmt"
-	yaml "gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	S "strings"
 	"path"
 	FU "github.com/fbaube/fileutils"
-	"github.com/fbaube/bloggenator/config"
+	SU "github.com/fbaube/stringutils"
 	"github.com/fbaube/bloggenator/datasource"
 	"github.com/fbaube/bloggenator/generator"
 )
 
 // Run runs the application. Amaze!
 func Run() {
-	cfg, err := readConfig()
+	cfgs, err := readConfig()
 	if err != nil {
 		log.Fatal("Can't read configuration file: ", err)
 	}
 	var dstype string
 	var repo string
-	repo = cfg.Generator.Repo
+	repo = cfgs[0]["repo"]
 	hasProtocol := S.Contains(repo, "://")
 	idxProtocol := S.Index(repo, "://")
 	if hasProtocol && S.HasPrefix(repo, "http") {
@@ -33,10 +32,11 @@ func Run() {
 	} else {
 		log.Fatal(fmt.Errorf("unknown protocol: %s", repo))
 	}
+	println("DSTYPE:", dstype)
 	// Check that arguments are OK
 	var chp_tmpTo, chp_repo *FU.CheckedPath
   var tmpTo string
-	tmpTo = cfg.Generator.Tmp
+	tmpTo = cfgs[0]["tmp"]
 	chp_tmpTo = FU.NewCheckedPath(tmpTo)
 	if chp_tmpTo.Exists && !chp_tmpTo.IsDir {
 		log.Fatal(fmt.Errorf("\"Tmp\" is not a directory: <%s>", tmpTo))
@@ -52,7 +52,7 @@ func Run() {
 	// Fetch(from, to string)
 	switch dstype {
 	case "git":
-		dirs, err = ds.Fetch(cfg.Generator.Repo, cfg.Generator.Tmp)
+		dirs, err = ds.Fetch(cfgs[0]["repo"], cfgs[0]["tmp"])
 	case "filesystem":
 		dirs, err = ds.Fetch(chp_repo.AbsFilePath.S(), chp_tmpTo.AbsFilePath.S())
 	}
@@ -60,9 +60,9 @@ func Run() {
 		log.Fatal(err)
 	}
 	g := generator.New(&generator.SiteConfig{
-		Sources:     dirs,
-		Destination: cfg.Generator.Dest,
-		Config:      cfg,
+		Sources: dirs,
+		Dest:    cfgs[0]["dest"],
+		Configs: cfgs,
 	})
 
 	err = g.Generate()
@@ -72,44 +72,62 @@ func Run() {
 	}
 }
 
-func readConfig() (*config.Config, error) {
-	data, err := ioutil.ReadFile("bloggen.yml")
-	if err != nil {
-		return nil, fmt.Errorf("Can't read config file: %w", err)
+func readConfig() (ps []SU.PropSet, e error) {
+	data, e := ioutil.ReadFile("bloggen.yml")
+	if e != nil {
+		return nil, fmt.Errorf("Can't read config file: %w", e)
 	}
-	cfg := config.Config{}
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("Can't parse config: %w", err)
+	cfgMap, _, e := SU.GetYamlMetadata(string(data))
+	if e != nil || cfgMap == nil {
+		return nil, fmt.Errorf("Can't parse config: %w", e)
 	}
-	if cfg.Generator.Repo == "" {
-		return nil, fmt.Errorf("Provide a repository URL: a directory filepath or http[s]")
+	fmt.Printf("CFG-MAP: %+v \n", cfgMap)
+
+	ps = make([]SU.PropSet, 3)
+	if cfgMap["generator"] == nil ||
+	   cfgMap["blog"] == nil ||
+		 cfgMap["statics"] == nil {
+			panic("nil's in cli.go")
+		}
+	ps[0] = SU.YamlMapAsPropSet(cfgMap["generator"].(map[interface{}]interface{}))
+	ps[1] = SU.YamlMapAsPropSet(cfgMap["blog"].(map[interface{}]interface{}))
+	ps[2] = SU.YamlMapAsPropSet(cfgMap["statics"].(map[interface{}]interface{}))
+	if ps[0]["repo"] == "" {
+		return nil, fmt.Errorf("Provide a repo URL: filepath:// or http[s]://")
 	}
-	if cfg.Generator.Tmp == "" {
-		cfg.Generator.Tmp = "tmp"
+	if ps[0]["tmp"] == "" {
+		ps[0]["tmp"] = "tmp"
 	}
-	if cfg.Generator.Dest == "" {
-		cfg.Generator.Dest = "www"
+	if ps[0]["dest"] == "" {
+		ps[0]["dest"] = "www"
 	}
-	if cfg.Blog.URL == "" {
+	if ps[1]["url"] == "" {
 		return nil, fmt.Errorf("Please provide a Blog URL, e.g.: https://www.zupzup.org")
 	}
-	if cfg.Blog.Language == "" {
-		cfg.Blog.Language = "en-us"
+	if ps[1]["language"] == "" {
+		ps[1]["language"] = "en-us"
 	}
-	if cfg.Blog.Description == "" {
+	if ps[1]["description"] == "" {
 		return nil, fmt.Errorf("Provide a Blog Description, e.g.: A blog about blogging")
 	}
-	if cfg.Blog.Dateformat == "" {
-		cfg.Blog.Dateformat = "02.01.2006"
+	if ps[1]["dateformat"] == "" {
+		ps[1]["dateformat"] = "02.01.2006"
 	}
-	if cfg.Blog.Title == "" {
+	if ps[1]["title"] == "" {
 		return nil, fmt.Errorf("Provide a Blog Title, e.g.: wuzzup")
 	}
-	if cfg.Blog.Author == "" {
+	if ps[1]["author"] == "" {
 		return nil, fmt.Errorf("Provide a Blog author, e.g.: Joe Blow")
 	}
-	if cfg.Blog.Frontpageposts == 0 {
-		cfg.Blog.Frontpageposts = 10
+	if ps[1]["frontpageposts"] == "0" {
+		ps[1]["frontpageposts"] = "10"
 	}
-	return &cfg, nil
+	/*
+	iw = new(generator.IndexWriter)
+	iw.BlogTitle  = ps[1]["title"]
+	iw.BlogDesc   = ps[1]["description"]
+	iw.BlogAuthor = ps[1]["author"]
+	iw.BlogURL    = ps[1]["url"]
+	*/
+	return ps, nil
 }
