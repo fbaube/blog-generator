@@ -32,7 +32,7 @@ func (ds *FileSystemDataSource) Fetch(from, to string) ([]string, error) {
 		return nil, e
 	}
 	// if err := cloneFileDir(to, from); err != nil {
-	if e = /*fileutils.*/CopyDirRecursivelyFromTo(from, to); e != nil {
+	if e = CopyDirRecursivelyFromTo(from, to); e != nil {
 		return nil, e
 	}
 	var dirs []string
@@ -44,22 +44,8 @@ func (ds *FileSystemDataSource) Fetch(from, to string) ([]string, error) {
 	return dirs, nil
 }
 
-/*
-func cloneFileDir(pathTo, repoFrom string) error {
-	cmdName := "cp"
-	initArgs := []string{"pR", repoFrom+"/*", pathTo+"/"}
-	fmt.Printf("cp: %+v \n", initArgs)
-	cmd := exec.Command(cmdName, initArgs...)
-	cmd.Dir = pathTo + "/.."
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("error copying repo to:%s from:%s : %v",
-			pathTo, repoFrom, err)
-	}
-	return nil
-}
-*/
 func cloneFileDir(pathTo string, repoFrom string) error {
-	b := /*fileutils.*/CopyDirRecursivelyFromTo(repoFrom, pathTo)
+	b := CopyDirRecursivelyFromTo(repoFrom, pathTo)
 	return b
 }
 

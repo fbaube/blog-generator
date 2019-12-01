@@ -13,25 +13,6 @@ import (
 	SU "github.com/fbaube/stringutils"
 )
 
-/*
-// IndexWriter writes index.html files.
-type IndexWriter struct {
-	BlogTitle  string
-	BlogDesc   string
-	BlogAuthor string
-	BlogURL    string
-}
-
-func NewIndexWriter(cfg []SU.PropSet) (*IndexWriter) {
-	iw := new(IndexWriter)
-	iw.BlogTitle  = cfg[1]["title"]
-	iw.BlogDesc   = cfg[1]["description"]
-	iw.BlogAuthor = cfg[1]["author"]
-	iw.BlogURL    = cfg[1]["url"]
-	return iw
-}
-*/
-
 // WriteIndexHTML writes an index.html file.
 // func (i *IndexWriter) WriteIndexHTML(path, pageTitle, metaDescription string, content template.HTML, t *template.Template) error {
 func WriteIndexHTML(blogProps SU.PropSet, path, pageTitle, metaDescription string, content template.HTML, t *template.Template) error {
