@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	SU "github.com/fbaube/stringutils"
 )
 
 // RSSGenerator object
@@ -15,13 +16,11 @@ type RSSGenerator struct {
 
 // RSSConfig holds the configuration for an RSS feed.
 type RSSConfig struct {
-	Posts           []*Post
-	Destination     string
-	DateFormat      string
-	Language        string
-	BlogURL         string
-	BlogDescription string
-	BlogTitle       string
+	Posts    []*Post
+	Dest        string
+	// DateFormat  string
+	// Language    string
+	BlogProps   SU.PropSet // IndexWriter
 }
 
 const rssDateFormat string = "02 Jan 2006 15:04 -0700"
@@ -30,7 +29,7 @@ const rssDateFormat string = "02 Jan 2006 15:04 -0700"
 func (g *RSSGenerator) Generate() error {
 	fmt.Println("\tGenerating RSS...")
 	posts := g.Config.Posts
-	destination := g.Config.Destination
+	destination := g.Config.Dest
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
 	rss := doc.CreateElement("rss")
@@ -38,19 +37,20 @@ func (g *RSSGenerator) Generate() error {
 	rss.CreateAttr("version", "2.0")
 	channel := rss.CreateElement("channel")
 
-	channel.CreateElement("title").SetText(g.Config.BlogTitle)
-	channel.CreateElement("link").SetText(g.Config.BlogURL)
-	channel.CreateElement("language").SetText(g.Config.Language)
-	channel.CreateElement("description").SetText(g.Config.BlogDescription)
+	channel.CreateElement("title").SetText(g.Config.BlogProps["title"]) // BlogTitle)
+	channel.CreateElement("link").SetText(g.Config.BlogProps["url"]) // BlogURL)
+	channel.CreateElement("language").SetText(g.Config.BlogProps["language"]) // Language)
+	channel.CreateElement("description").SetText(g.Config.BlogProps["description"]) // BlogDesc)
 	channel.CreateElement("lastBuildDate").SetText(time.Now().Format(rssDateFormat))
 
 	atomLink := channel.CreateElement("atom:link")
-	atomLink.CreateAttr("href", fmt.Sprintf("%s/index.xml", g.Config.BlogURL))
+	atomLink.CreateAttr("href", fmt.Sprintf("%s/index.xml", g.Config.BlogProps["url"])) // BlogURL))
 	atomLink.CreateAttr("rel", "self")
 	atomLink.CreateAttr("type", "application/rss+xml")
 
 	for _, post := range posts {
-		if err := addItem(channel, post, fmt.Sprintf("%s/%s/", g.Config.BlogURL, post.Name[1:]), g.Config.DateFormat); err != nil {
+		if err := addItem(channel, post, fmt.Sprintf("%s/%s/", g.Config.BlogProps["url"],
+				post.Name[1:]), g.Config.BlogProps["dateformat"]); err != nil {
 			return err
 		}
 	}

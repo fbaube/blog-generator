@@ -96,7 +96,7 @@ func runTasks(posts []*Post, t *template.Template, destination string,
 	errs := make(chan error, 1)
 	pool := make(chan struct{}, 50)
 	generators := []Generator{}
-	indexWriter := NewIndexWriter(cfgs)
+	indexWriter := cfgs[1] // NewIndexWriter(cfgs)
 	// ==========================
 	//   POSTS
 	// ==========================
@@ -105,7 +105,7 @@ func runTasks(posts []*Post, t *template.Template, destination string,
 		pPC.Post = post
 		pPC.Dest = destination
 		pPC.Template = t
-		pPC.IndexWriter = indexWriter
+		pPC.BlogProps = indexWriter
 		println(pPC.String())
 		pg := PostGenerator{pPC}
 		generators = append(generators, &pg)
@@ -120,7 +120,7 @@ func runTasks(posts []*Post, t *template.Template, destination string,
 	pLC.Template = t
 	pLC.Dest = destination
 	pLC.PageTitle = ""
-	pLC.IndexWriter =  indexWriter
+	pLC.BlogProps = indexWriter
 	pLC.IsIndex = true
 	println(pLC.String())
 	fg := ListingGenerator{pLC}
@@ -132,7 +132,7 @@ func runTasks(posts []*Post, t *template.Template, destination string,
 	pAC.Template = t
 	pAC.Dest = filepath.Join(destination, "archive")
 	pAC.PageTitle = "Archive"
-	pAC.IndexWriter =  indexWriter
+	pAC.BlogProps =  indexWriter
 	pAC.IsIndex = false
 	println(pAC.String())
 	ag := ListingGenerator{pAC}
@@ -143,7 +143,7 @@ func runTasks(posts []*Post, t *template.Template, destination string,
 	pTC.TagPostsMap = tagPostsMap
 	pTC.Template = t
 	pTC.Dest = destination
-	pTC.IndexWriter =  indexWriter
+	pTC.BlogProps =  indexWriter
 	println("TagsCfg:", pTC.BaseConfig.String(),
 		fmt.Sprintf("; \n\t TagPostsMap: %+v", pTC.TagPostsMap))
 	tg := TagsGenerator{pTC}
@@ -152,17 +152,16 @@ func runTasks(posts []*Post, t *template.Template, destination string,
 	var files, tmpls []string
 	file = cfgs[2]["files"]
 	tmpl = cfgs[2]["templates"]
-	println("FILEs:", file)
-	println("TMPLs:", tmpl)
 	files = S.Split(file, " ")
 	tmpls = S.Split(tmpl, " ")
 	fmt.Printf("FILES: %v \n", files)
 	fmt.Printf("TMPLS: %v \n", tmpls)
-
 	for _, staticURL := range tmpls {
 		staticURLs = append(staticURLs, staticURL) // .Dest)
 	}
-	// sitemap
+	// ==========================
+	//   SITEMAP
+	// ==========================
 	sg := SitemapGenerator{&SitemapConfig{
 		Posts:       posts,
 		TagPostsMap: tagPostsMap,
@@ -170,16 +169,16 @@ func runTasks(posts []*Post, t *template.Template, destination string,
 		BlogURL:     cfgs[1]["url"],
 		Statics:     staticURLs,
 	}}
-	// rss
-	rg := RSSGenerator{&RSSConfig{
-		Posts:           posts,
-		Destination:     destination,
-		DateFormat:      cfgs[1]["dateformat"],
-		Language:        cfgs[1]["language"],
-		BlogURL:         cfgs[1]["url"],
-		BlogDescription: cfgs[1]["description"],
-		BlogTitle:       cfgs[1]["title"],
-	}}
+	// ==========================
+	//   RSS
+	// ==========================
+	pRC := new(RSSConfig)
+	pRC.BlogProps = cfgs[1] // *NewIndexWriter(cfgs)
+	pRC.Posts      = posts
+	pRC.Dest       = destination
+	// pRC.DateFormat = cfgs[1]["dateformat"]
+	// pRC.Language   = cfgs[1]["language"]
+	rg := RSSGenerator{pRC}
 	// ==========================
 	//   STATICS
 	// ==========================
@@ -198,7 +197,7 @@ func runTasks(posts []*Post, t *template.Template, destination string,
 	pSC.FilesToDests = fileToDestination
 	pSC.TmplsToFiles = templateToFile
 	pSC.Template = t
-	pSC.IndexWriter = indexWriter
+	pSC.BlogProps = indexWriter
 	fmt.Printf("StcsCfg: %s; \n\t %+v %+v \n",
 		pSC.BaseConfig.String(), pSC.FilesToDests, pSC.TmplsToFiles)
 	statg := StaticsGenerator{pSC}

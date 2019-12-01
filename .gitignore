@@ -29,3 +29,9 @@ config.yml
 blog-generator
 vendor
 bloggen.yml
+
+bsrc
+workdir
+bloggenator
+.DS_Store
+config

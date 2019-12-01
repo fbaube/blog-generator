@@ -3,15 +3,16 @@ package generator
 import (
   "fmt"
   "html/template"
+  SU "github.com/fbaube/stringutils"
 )
 
 type BaseConfig struct {
-     /*Template*/   *template.Template
-     Dest/*ination*/ string
-     /*Writer*/     *IndexWriter
+     *template.Template
+     Dest string
+     BlogProps SU.PropSet // *IndexWriter
 }
 
 func (bc *BaseConfig) String() string {
-  return fmt.Sprintf("BasCgf:(Tmpl==nil)<%t>Dest<%s>IdxWrtr<%s>",
-    (nil == bc.Template), bc.Dest, *bc.IndexWriter)
+  return fmt.Sprintf("BasCgf:(Tmpl==nil)<%t>Dest<%s>Props<%v>",
+    (nil == bc.Template), bc.Dest, bc.BlogProps)
 }

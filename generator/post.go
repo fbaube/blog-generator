@@ -61,7 +61,7 @@ func (g *PostGenerator) Generate() error {
 			return err
 		}
 	}
-	if err := g.Config.IndexWriter.WriteIndexHTML(staticPath, post.Meta.Title, post.Meta.Short, template.HTML(string(post.HTML)), t); err != nil {
+	if err := WriteIndexHTML(g.Config.BlogProps, staticPath, post.Meta.Title, post.Meta.Short, template.HTML(string(post.HTML)), t); err != nil {
 		return err
 	}
 	fmt.Printf("\tFinished generating Post: %s...\n", post.Meta.Title)

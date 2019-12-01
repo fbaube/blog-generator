@@ -13,6 +13,7 @@ import (
 	SU "github.com/fbaube/stringutils"
 )
 
+/*
 // IndexWriter writes index.html files.
 type IndexWriter struct {
 	BlogTitle  string
@@ -29,9 +30,11 @@ func NewIndexWriter(cfg []SU.PropSet) (*IndexWriter) {
 	iw.BlogURL    = cfg[1]["url"]
 	return iw
 }
+*/
 
 // WriteIndexHTML writes an index.html file.
-func (i *IndexWriter) WriteIndexHTML(path, pageTitle, metaDescription string, content template.HTML, t *template.Template) error {
+// func (i *IndexWriter) WriteIndexHTML(path, pageTitle, metaDescription string, content template.HTML, t *template.Template) error {
+func WriteIndexHTML(blogProps SU.PropSet, path, pageTitle, metaDescription string, content template.HTML, t *template.Template) error {
 	filePath := filepath.Join(path, "index.html")
 	f, err := os.Create(filePath)
 	if err != nil {
@@ -40,7 +43,7 @@ func (i *IndexWriter) WriteIndexHTML(path, pageTitle, metaDescription string, co
 	defer f.Close()
 	metaDesc := metaDescription
 	if metaDescription == "" {
-		metaDesc = i.BlogDesc
+		metaDesc = blogProps["description"]
 	}
 	hlbuf := bytes.Buffer{}
 	hlw := bufio.NewWriter(&hlbuf)
@@ -49,12 +52,12 @@ func (i *IndexWriter) WriteIndexHTML(path, pageTitle, metaDescription string, co
 	hlw.Flush()
 	w := bufio.NewWriter(f)
 	td := IndexData{
-		Name:            i.BlogAuthor,
+		Name:            blogProps["author"],
 		Year:            time.Now().Year(),
-		HTMLTitle:       getHTMLTitle(pageTitle, i.BlogTitle),
+		HTMLTitle:       getHTMLTitle(pageTitle, blogProps["title"]),
 		PageTitle:       pageTitle,
 		Content:         content,
-		CanonicalLink:   buildCanonicalLink(path, i.BlogURL),
+		CanonicalLink:   buildCanonicalLink(path, blogProps["url"]),
 		MetaDescription: metaDesc,
 		HighlightCSS:    template.CSS(hlbuf.String()),
 	}

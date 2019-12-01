@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	S "strings"
 	"path"
+	S "strings"
 	FU "github.com/fbaube/fileutils"
 	SU "github.com/fbaube/stringutils"
 	"github.com/fbaube/bloggenator/datasource"
@@ -32,7 +32,7 @@ func Run() {
 	} else {
 		log.Fatal(fmt.Errorf("unknown protocol: %s", repo))
 	}
-	println("DSTYPE:", dstype)
+	println("Data source type:", dstype)
 	// Check that arguments are OK
 	var chp_tmpTo, chp_repo *FU.CheckedPath
   var tmpTo string
@@ -59,6 +59,8 @@ func Run() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Printf("Dirs to fetch from: %v \n", dirs)
+
 	g := generator.New(&generator.SiteConfig{
 		Sources: dirs,
 		Dest:    cfgs[0]["dest"],
@@ -75,7 +77,8 @@ func Run() {
 func readConfig() (ps []SU.PropSet, e error) {
 	data, e := ioutil.ReadFile("bloggen.yml")
 	if e != nil {
-		return nil, fmt.Errorf("Can't read config file: %w", e)
+		return nil, fmt.Errorf(
+			"Can't read config file <%s>: %w", "bloggen.yml", e)
 	}
 	cfgMap, _, e := SU.GetYamlMetadata(string(data))
 	if e != nil || cfgMap == nil {
@@ -85,7 +88,7 @@ func readConfig() (ps []SU.PropSet, e error) {
 
 	ps = make([]SU.PropSet, 3)
 	if cfgMap["generator"] == nil ||
-	   cfgMap["blog"] == nil ||
+	   cfgMap["blog"]     == nil ||
 		 cfgMap["statics"] == nil {
 			panic("nil's in cli.go")
 		}
@@ -96,38 +99,37 @@ func readConfig() (ps []SU.PropSet, e error) {
 		return nil, fmt.Errorf("Provide a repo URL: filepath:// or http[s]://")
 	}
 	if ps[0]["tmp"] == "" {
+		println("Setting default: tmp")
 		ps[0]["tmp"] = "tmp"
 	}
 	if ps[0]["dest"] == "" {
+		println("Setting default dest: www")
 		ps[0]["dest"] = "www"
 	}
-	if ps[1]["url"] == "" {
+	iw := ps[1] // generator.NewIndexWriter(ps)
+	if iw["url"] == "" {
 		return nil, fmt.Errorf("Please provide a Blog URL, e.g.: https://www.zupzup.org")
 	}
-	if ps[1]["language"] == "" {
+	if iw["language"] == "" {
+		println("Setting default lg: en-us")
 		ps[1]["language"] = "en-us"
 	}
-	if ps[1]["description"] == "" {
+	if iw["description"] == "" {
 		return nil, fmt.Errorf("Provide a Blog Description, e.g.: A blog about blogging")
 	}
-	if ps[1]["dateformat"] == "" {
+	if iw["dateformat"] == "" {
+		println("Setting default date format: 02.01.2006")
 		ps[1]["dateformat"] = "02.01.2006"
 	}
-	if ps[1]["title"] == "" {
+	if iw["title"] == "" {
 		return nil, fmt.Errorf("Provide a Blog Title, e.g.: wuzzup")
 	}
-	if ps[1]["author"] == "" {
+	if iw["author"] == "" {
 		return nil, fmt.Errorf("Provide a Blog author, e.g.: Joe Blow")
 	}
 	if ps[1]["frontpageposts"] == "0" {
+		println("Setting default post count: 10")
 		ps[1]["frontpageposts"] = "10"
 	}
-	/*
-	iw = new(generator.IndexWriter)
-	iw.BlogTitle  = ps[1]["title"]
-	iw.BlogDesc   = ps[1]["description"]
-	iw.BlogAuthor = ps[1]["author"]
-	iw.BlogURL    = ps[1]["url"]
-	*/
 	return ps, nil
 }
