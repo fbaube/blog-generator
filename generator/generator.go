@@ -1,22 +1,19 @@
 package generator
 
 import (
-	"bufio"
-	"bytes"
 	"fmt"
-	"github.com/alecthomas/chroma/formatters/html"
-	"github.com/alecthomas/chroma/styles"
-	"github.com/fbaube/blog-generator/config"
+	SU "github.com/fbaube/stringutils"
 	"html/template"
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
+	S "strings"
+	"strconv"
 	"sync"
 	"time"
 )
 
-// Meta is a data container for Metadata
+// Meta is a data container for per-post Metadata in a "meta.yaml".
 type Meta struct {
 	Title      string
 	Short      string
@@ -25,7 +22,7 @@ type Meta struct {
 	ParsedDate time.Time
 }
 
-// IndexData is a data container for the landing page
+// IndexData is a data container for the landing page.
 type IndexData struct {
 	HTMLTitle       string
 	PageTitle       string
@@ -44,27 +41,27 @@ type Generator interface {
 
 // SiteGenerator object
 type SiteGenerator struct {
-	Config *SiteConfig
+	StConfig *SiteConfig
 }
 
 // SiteConfig holds the sources and destination folder
 type SiteConfig struct {
 	Sources     []string
-	Destination string
-	Config      *config.Config
+	Dest string
+	Configs  []SU.PropSet
 }
 
-// New creates a new SiteGenerator
+// New creates a new SiteGenerator.
 func New(config *SiteConfig) *SiteGenerator {
-	return &SiteGenerator{Config: config}
+	return &SiteGenerator{StConfig: config}
 }
 
-// Generate starts the static blog generation
+// Generate starts the static blog generation.
 func (g *SiteGenerator) Generate() error {
 	templatePath := filepath.Join("static", "template.html")
 	fmt.Println("Generating Site...")
-	sources := g.Config.Sources
-	destination := g.Config.Destination
+	sources := g.StConfig.Sources
+	destination := g.StConfig.Dest
 	if err := clearAndCreateDestination(destination); err != nil {
 		return err
 	}
@@ -77,108 +74,134 @@ func (g *SiteGenerator) Generate() error {
 	}
 	var posts []*Post
 	for _, path := range sources {
-		post, err := newPost(path, g.Config.Config.Blog.Dateformat)
+		post, err := newPost(path, g.StConfig.Configs[1]["dateformat"])
 		if err != nil {
 			return err
 		}
 		posts = append(posts, post)
 	}
 	sort.Sort(ByDateDesc(posts))
-	if err := runTasks(posts, t, destination, g.Config.Config); err != nil {
+	if err := runTasks(posts, t, destination, g.StConfig.Configs); err != nil {
 		return err
 	}
 	fmt.Println("Finished generating Site...")
 	return nil
 }
 
-func runTasks(posts []*Post, t *template.Template, destination string, cfg *config.Config) error {
+func runTasks(posts []*Post, t *template.Template, destination string,
+		cfgs []SU.PropSet) error {
+
 	var wg sync.WaitGroup
-	finished := make(chan bool, 1)
-	errors := make(chan error, 1)
+	done := make(chan bool, 1)
+	errs := make(chan error, 1)
 	pool := make(chan struct{}, 50)
 	generators := []Generator{}
-
-	indexWriter := &IndexWriter{
-		BlogURL:         cfg.Blog.URL,
-		BlogTitle:       cfg.Blog.Title,
-		BlogDescription: cfg.Blog.Description,
-		BlogAuthor:      cfg.Blog.Author,
-	}
-
-	//posts
+	indexWriter := NewIndexWriter(cfgs)
+	// ==========================
+	//   POSTS
+	// ==========================
 	for _, post := range posts {
-		pg := PostGenerator{&PostConfig{
-			Post:        post,
-			Destination: destination,
-			Template:    t,
-			Writer:      indexWriter,
-		}}
+		pPC := new(PostConfig)
+		pPC.Post = post
+		pPC.Dest = destination
+		pPC.Template = t
+		pPC.IndexWriter = indexWriter
+		println(pPC.String())
+		pg := PostGenerator{pPC}
 		generators = append(generators, &pg)
 	}
 	tagPostsMap := createTagPostsMap(posts)
-	// frontpage
-	fg := ListingGenerator{&ListingConfig{
-		Posts:       posts[:getNumOfPagesOnFrontpage(posts, cfg.Blog.Frontpageposts)],
-		Template:    t,
-		Destination: destination,
-		PageTitle:   "",
-		IsIndex:     true,
-		Writer:      indexWriter,
-	}}
-	// archive
-	ag := ListingGenerator{&ListingConfig{
-		Posts:       posts,
-		Template:    t,
-		Destination: filepath.Join(destination, "archive"),
-		PageTitle:   "Archive",
-		IsIndex:     false,
-		Writer:      indexWriter,
-	}}
-	// tags
-	tg := TagsGenerator{&TagsConfig{
-		TagPostsMap: tagPostsMap,
-		Template:    t,
-		Destination: destination,
-		Writer:      indexWriter,
-	}}
-
+	// ==========================
+	//   FRONT PAGE
+	// ==========================
+	nrposts, _ := strconv.Atoi(cfgs[1]["frontpageposts"])
+	pLC := new(ListingConfig)
+	pLC.Posts = posts[:getNumOfPagesOnFrontpage(posts, nrposts)]
+	pLC.Template = t
+	pLC.Dest = destination
+	pLC.PageTitle = ""
+	pLC.IndexWriter =  indexWriter
+	pLC.IsIndex = true
+	println(pLC.String())
+	fg := ListingGenerator{pLC}
+	// ==========================
+	//   ARCHIVE
+	// ==========================
+	pAC := new(ListingConfig)
+	pAC.Posts = posts
+	pAC.Template = t
+	pAC.Dest = filepath.Join(destination, "archive")
+	pAC.PageTitle = "Archive"
+	pAC.IndexWriter =  indexWriter
+	pAC.IsIndex = false
+	println(pAC.String())
+	ag := ListingGenerator{pAC}
+	// ==========================
+	//   TAGS
+	// ==========================
+	pTC := new(TagsConfig)
+	pTC.TagPostsMap = tagPostsMap
+	pTC.Template = t
+	pTC.Dest = destination
+	pTC.IndexWriter =  indexWriter
+	println("TagsCfg:", pTC.BaseConfig.String(),
+		fmt.Sprintf("; \n\t TagPostsMap: %+v", pTC.TagPostsMap))
+	tg := TagsGenerator{pTC}
 	staticURLs := []string{}
-	for _, staticURL := range cfg.Blog.Statics.Templates {
-		staticURLs = append(staticURLs, staticURL.Dest)
+	var file, tmpl string
+	var files, tmpls []string
+	file = cfgs[2]["files"]
+	tmpl = cfgs[2]["templates"]
+	println("FILEs:", file)
+	println("TMPLs:", tmpl)
+	files = S.Split(file, " ")
+	tmpls = S.Split(tmpl, " ")
+	fmt.Printf("FILES: %v \n", files)
+	fmt.Printf("TMPLS: %v \n", tmpls)
+
+	for _, staticURL := range tmpls {
+		staticURLs = append(staticURLs, staticURL) // .Dest)
 	}
 	// sitemap
 	sg := SitemapGenerator{&SitemapConfig{
 		Posts:       posts,
 		TagPostsMap: tagPostsMap,
 		Destination: destination,
-		BlogURL:     cfg.Blog.URL,
+		BlogURL:     cfgs[1]["url"],
 		Statics:     staticURLs,
 	}}
 	// rss
 	rg := RSSGenerator{&RSSConfig{
 		Posts:           posts,
 		Destination:     destination,
-		DateFormat:      cfg.Blog.Dateformat,
-		Language:        cfg.Blog.Language,
-		BlogURL:         cfg.Blog.URL,
-		BlogDescription: cfg.Blog.Description,
-		BlogTitle:       cfg.Blog.Title,
+		DateFormat:      cfgs[1]["dateformat"],
+		Language:        cfgs[1]["language"],
+		BlogURL:         cfgs[1]["url"],
+		BlogDescription: cfgs[1]["description"],
+		BlogTitle:       cfgs[1]["title"],
 	}}
-	// statics
+	// ==========================
+	//   STATICS
+	// ==========================
 	fileToDestination := map[string]string{}
-	for _, static := range cfg.Blog.Statics.Files {
-		fileToDestination[static.Src] = filepath.Join(destination, static.Dest)
+	for _, static := range files {
+		fileToDestination["static/" + static] = filepath.Join(destination, static) // .Dest)
 	}
+	// ==========================
+	//   TEMPLATES
+	// ==========================
 	templateToFile := map[string]string{}
-	for _, static := range cfg.Blog.Statics.Templates {
-		templateToFile[static.Src] = filepath.Join(destination, static.Dest, "index.html")
+	for _, static := range tmpls {
+		templateToFile["static/" + static] = filepath.Join(destination, static, "index.html")
 	}
-	statg := StaticsGenerator{&StaticsConfig{
-		FileToDestination: fileToDestination,
-		TemplateToFile:    templateToFile,
-		Template:          t,
-		Writer:            indexWriter,
-	}}
+	pSC := new(StaticsConfig)
+	pSC.FilesToDests = fileToDestination
+	pSC.TmplsToFiles = templateToFile
+	pSC.Template = t
+	pSC.IndexWriter = indexWriter
+	fmt.Printf("StcsCfg: %s; \n\t %+v %+v \n",
+		pSC.BaseConfig.String(), pSC.FilesToDests, pSC.TmplsToFiles)
+	statg := StaticsGenerator{pSC}
 	generators = append(generators, &fg, &ag, &tg, &sg, &rg, &statg)
 
 	for _, generator := range generators {
@@ -188,20 +211,20 @@ func runTasks(posts []*Post, t *template.Template, destination string, cfg *conf
 			pool <- struct{}{}
 			defer func() { <-pool }()
 			if err := g.Generate(); err != nil {
-				errors <- err
+				errs <- err
 			}
 		}(generator)
 	}
 
 	go func() {
 		wg.Wait()
-		close(finished)
+		close(done)
 	}()
 
 	select {
-	case <-finished:
+	case <-done:
 		return nil
-	case err := <-errors:
+	case err := <-errs:
 		if err != nil {
 			return err
 		}
@@ -218,51 +241,6 @@ func clearAndCreateDestination(path string) error {
 	return os.Mkdir(path, os.ModePerm)
 }
 
-// IndexWriter writer index.html files
-type IndexWriter struct {
-	BlogTitle       string
-	BlogDescription string
-	BlogAuthor      string
-	BlogURL         string
-}
-
-// WriteIndexHTML writes an index.html file
-func (i *IndexWriter) WriteIndexHTML(path, pageTitle, metaDescription string, content template.HTML, t *template.Template) error {
-	filePath := filepath.Join(path, "index.html")
-	f, err := os.Create(filePath)
-	if err != nil {
-		return fmt.Errorf("error creating file %s: %v", filePath, err)
-	}
-	defer f.Close()
-	metaDesc := metaDescription
-	if metaDescription == "" {
-		metaDesc = i.BlogDescription
-	}
-	hlbuf := bytes.Buffer{}
-	hlw := bufio.NewWriter(&hlbuf)
-	formatter := html.New(html.WithClasses())
-	formatter.WriteCSS(hlw, styles.MonokaiLight)
-	hlw.Flush()
-	w := bufio.NewWriter(f)
-	td := IndexData{
-		Name:            i.BlogAuthor,
-		Year:            time.Now().Year(),
-		HTMLTitle:       getHTMLTitle(pageTitle, i.BlogTitle),
-		PageTitle:       pageTitle,
-		Content:         content,
-		CanonicalLink:   buildCanonicalLink(path, i.BlogURL),
-		MetaDescription: metaDesc,
-		HighlightCSS:    template.CSS(hlbuf.String()),
-	}
-	if err := t.Execute(w, td); err != nil {
-		return fmt.Errorf("error executing template %s: %v", filePath, err)
-	}
-	if err := w.Flush(); err != nil {
-		return fmt.Errorf("error writing file %s: %v", filePath, err)
-	}
-	return nil
-}
-
 func getHTMLTitle(pageTitle, blogTitle string) string {
 	if pageTitle == "" {
 		return blogTitle
@@ -274,7 +252,7 @@ func createTagPostsMap(posts []*Post) map[string][]*Post {
 	result := make(map[string][]*Post)
 	for _, post := range posts {
 		for _, tag := range post.Meta.Tags {
-			key := strings.ToLower(tag)
+			key := S.ToLower(tag)
 			if result[key] == nil {
 				result[key] = []*Post{post}
 			} else {
@@ -301,9 +279,9 @@ func getNumOfPagesOnFrontpage(posts []*Post, numPosts int) int {
 }
 
 func buildCanonicalLink(path, baseURL string) string {
-	parts := strings.Split(path, "/")
+	parts := S.Split(path, "/")
 	if len(parts) > 2 {
-		return fmt.Sprintf("%s/%s/index.html", baseURL, strings.Join(parts[2:], "/"))
+		return fmt.Sprintf("%s/%s/index.html", baseURL, S.Join(parts[2:], "/"))
 	}
 	return "/"
 }

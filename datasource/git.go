@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	S "strings"
 )
 
 // GitDataSource is the git data source object
@@ -12,7 +13,14 @@ type GitDataSource struct{}
 
 // Fetch creates the output folder, clears it and clones the repository there
 func (ds *GitDataSource) Fetch(from, to string) ([]string, error) {
-	fmt.Printf("Fetching data from %s into %s...\n", from, to)
+	if !S.Contains(from, "://") {
+		panic("missing protocol")
+	}
+	if !S.HasPrefix(from, "http") {
+		panic("bad protocol")
+	}
+	fmt.Printf("Fetching data into %s from %s ...\n", to, from)
+
 	if err := createFolderIfNotExist(to); err != nil {
 		return nil, err
 	}
@@ -44,22 +52,22 @@ func createFolderIfNotExist(path string) error {
 }
 
 func clearFolder(path string) error {
-	dir, err := os.Open(path)
-	if err != nil {
-		return fmt.Errorf("error accessing directory %s: %v", path, err)
+        dir, err := os.Open(path)
+        if err != nil {
+                return fmt.Errorf("error accessing directory %s: %v", path, err)
 	}
-	defer dir.Close()
-	names, err := dir.Readdirnames(-1)
-	if err != nil {
-		return fmt.Errorf("error reading directory %s: %v", path, err)
+        defer dir.Close()
+        names, err := dir.Readdirnames(-1)
+        if err != nil {
+                return fmt.Errorf("error reading directory %s: %v", path, err)
 	}
 
 	for _, name := range names {
-		if err = os.RemoveAll(filepath.Join(path, name)); err != nil {
-			return fmt.Errorf("error clearing file %s: %v", name, err)
-		}
-	}
-	return nil
+				if err = os.RemoveAll(filepath.Join(path, name)); err != nil {
+								return fmt.Errorf("error clearing file %s: %v", name, err)
+				}
+}
+return nil
 }
 
 func cloneRepo(path, repositoryURL string) error {

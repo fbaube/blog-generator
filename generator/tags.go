@@ -9,14 +9,14 @@ import (
 	"strings"
 )
 
-// Tag holds the data for a Tag
+// Tag holds the data for a Tag.
 type Tag struct {
 	Name  string
 	Link  string
 	Count int
 }
 
-// ByCountDesc sorts the tags
+// ByCountDesc sorts the tags.
 type ByCountDesc []*Tag
 
 // TagsGenerator object
@@ -24,30 +24,28 @@ type TagsGenerator struct {
 	Config *TagsConfig
 }
 
-// TagsConfig holds the tag's config
+// TagsConfig holds the tag's config.
 type TagsConfig struct {
 	TagPostsMap map[string][]*Post
-	Template    *template.Template
-	Destination string
-	Writer      *IndexWriter
+	BaseConfig
 }
 
-// Generate creates the tags page
+// Generate creates the tags page.
 func (g *TagsGenerator) Generate() error {
 	fmt.Println("\tGenerating Tags...")
 	tagPostsMap := g.Config.TagPostsMap
 	t := g.Config.Template
-	destination := g.Config.Destination
+	destination := g.Config.Dest
 	tagsPath := filepath.Join(destination, "tags")
 	if err := clearAndCreateDestination(tagsPath); err != nil {
 		return err
 	}
-	if err := generateTagIndex(tagPostsMap, t, tagsPath, g.Config.Writer); err != nil {
+	if err := generateTagIndex(tagPostsMap, t, tagsPath, g.Config.IndexWriter); err != nil {
 		return err
 	}
 	for tag, tagPosts := range tagPostsMap {
 		tagPagePath := filepath.Join(tagsPath, tag)
-		if err := generateTagPage(tag, tagPosts, t, tagPagePath, g.Config.Writer); err != nil {
+		if err := generateTagPage(tag, tagPosts, t, tagPagePath, g.Config.IndexWriter); err != nil {
 			return err
 		}
 	}
@@ -80,13 +78,15 @@ func generateTagPage(tag string, posts []*Post, t *template.Template, destinatio
 	if err := clearAndCreateDestination(destination); err != nil {
 		return err
 	}
-	lg := ListingGenerator{&ListingConfig{
-		Posts:       posts,
-		Template:    t,
-		Destination: destination,
-		PageTitle:   tag,
-		Writer:      writer,
-	}}
+	pLC := new(ListingConfig)
+	pLC.Posts = posts
+	pLC.Template = t
+	pLC.Dest = destination
+	pLC.PageTitle = tag
+	pLC.IndexWriter =  writer
+	println(pLC.String()) 
+	lg := ListingGenerator{pLC}
+
 	if err := lg.Generate(); err != nil {
 		return err
 	}

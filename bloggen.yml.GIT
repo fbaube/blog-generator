@@ -1,14 +1,14 @@
 generator:
-    repo: '/Users/fbaube/go/src/github.com/fbaube/bloggenator/bsrc'
-    tmp: 'workdir'
+    repo: 'https://github.com/zupzup/blog'
+    tmp: 'tmp'
     dest: 'www'
 blog:
-    url: 'https://www.infojunkie.eu'
+    url: 'https://www.zupzup.org'
     language: 'en-us'
     description: 'A blog about Go, JavaScript, Open Source and Programming in General'
     dateformat: '02.01.2006'
-    title: 'infojunkie'
-    author: 'Derf E. Buab'
+    title: 'zupzup'
+    author: 'Mario Zupan'
     frontpageposts: 10
     statics:
         files:

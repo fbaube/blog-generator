@@ -8,7 +8,6 @@ import (
 	"github.com/alecthomas/chroma/formatters/html"
 	"github.com/alecthomas/chroma/lexers"
 	"github.com/alecthomas/chroma/styles"
-	// "github.com/russross/blackfriday"
 	"github.com/yuin/goldmark"
 	"gopkg.in/yaml.v2"
 	"html/template"
@@ -19,16 +18,16 @@ import (
 	"time"
 )
 
-// Post holds data for a post
+// Post holds data for a post.
 type Post struct {
 	Name      string
-	HTML      []byte
+	HTML      string // []byte
 	Meta      *Meta
 	ImagesDir string
 	Images    []string
 }
 
-// ByDateDesc is the sorting object for posts
+// ByDateDesc is the sorting object for posts.
 type ByDateDesc []*Post
 
 // PostGenerator object
@@ -36,18 +35,21 @@ type PostGenerator struct {
 	Config *PostConfig
 }
 
-// PostConfig holds the post's configuration
+// PostConfig holds the post's configuration.
 type PostConfig struct {
 	Post        *Post
-	Destination string
-	Template    *template.Template
-	Writer      *IndexWriter
+	BaseConfig
 }
 
-// Generate generates a post
+func (pPC *PostConfig) String() string {
+	return fmt.Sprintf("PostCfg: %s; \n\t Post: %+v",
+			pPC.BaseConfig.String(), pPC.Post)
+}
+
+// Generate generates a post.
 func (g *PostGenerator) Generate() error {
 	post := g.Config.Post
-	destination := g.Config.Destination
+	destination := g.Config.Dest
 	t := g.Config.Template
 	fmt.Printf("\tGenerating Post: %s...\n", post.Meta.Title)
 	staticPath := filepath.Join(destination, post.Name)
@@ -59,8 +61,7 @@ func (g *PostGenerator) Generate() error {
 			return err
 		}
 	}
-
-	if err := g.Config.Writer.WriteIndexHTML(staticPath, post.Meta.Title, post.Meta.Short, template.HTML(string(post.HTML)), t); err != nil {
+	if err := g.Config.IndexWriter.WriteIndexHTML(staticPath, post.Meta.Title, post.Meta.Short, template.HTML(string(post.HTML)), t); err != nil {
 		return err
 	}
 	fmt.Printf("\tFinished generating Post: %s...\n", post.Meta.Title)
@@ -82,7 +83,7 @@ func newPost(path, dateFormat string) (*Post, error) {
 	}
 	name := filepath.Base(path)
 
-	return &Post{Name: name, Meta: meta, HTML: html, ImagesDir: imagesDir, Images: images}, nil
+	return &Post{Name: name, Meta: meta, HTML: string(html), ImagesDir: imagesDir, Images: images}, nil
 }
 
 func copyImagesDir(source, destination string) (err error) {
@@ -173,7 +174,7 @@ func replaceCodeParts(htmlFile []byte) (string, error) {
 		lang := strings.TrimPrefix(class, "language-")
 		oldCode := s.Text()
 		lexer := lexers.Get(lang)
-		formatter := html.New(html.WithClasses())
+		formatter := html.New(html.WithClasses(true))
 		iterator, err := lexer.Tokenise(nil, string(oldCode))
 		if err != nil {
 			fmt.Printf("ERROR during syntax highlighting, %v", err)

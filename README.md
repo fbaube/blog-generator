@@ -18,7 +18,7 @@ A static blog generator using a configurable GitHub repository as a data-source.
 ## Installation
 
 ```bash
-go get github.com/zupzup/blog-generator
+go get github.com/fbaube/bloggenator
 ```
 
 ## Usage & Customization

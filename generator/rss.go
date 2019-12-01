@@ -13,7 +13,7 @@ type RSSGenerator struct {
 	Config *RSSConfig
 }
 
-// RSSConfig holds the configuration for an RSS feed
+// RSSConfig holds the configuration for an RSS feed.
 type RSSConfig struct {
 	Posts           []*Post
 	Destination     string
@@ -26,7 +26,7 @@ type RSSConfig struct {
 
 const rssDateFormat string = "02 Jan 2006 15:04 -0700"
 
-// Generate creates an RSS feed
+// Generate creates an RSS feed.
 func (g *RSSGenerator) Generate() error {
 	fmt.Println("\tGenerating RSS...")
 	posts := g.Config.Posts
