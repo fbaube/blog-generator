@@ -266,7 +266,7 @@ func getHTMLTitle(pageTitle, blogTitle string) string {
 func createTagPostsMap(posts []*Post) map[string][]*Post {
 	result := make(map[string][]*Post)
 	for _, post := range posts {
-		tags := S.Split(post.Meta["tags"], " ")
+		tags := S.Split(post.PropSet["tags"], " ")
 		for _, tag := range tags { // post.Meta.Tags {
 			key := S.ToLower(tag)
 			if result[key] == nil {

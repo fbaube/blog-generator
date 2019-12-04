@@ -47,7 +47,7 @@ func (g *SitemapGenerator) Generate() error {
 		addURL(urlSet, tag, g.Config.BlogURL, nil)
 	}
 	for _, post := range posts {
-		addURL(urlSet, post.Name[1:], g.Config.BlogURL, post.Images)
+		addURL(urlSet, post.DirBase[1:], g.Config.BlogURL, post.Images)
 	}
 
 	filePath := filepath.Join(destination, "sitemap.xml")

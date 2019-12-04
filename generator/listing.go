@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
-	"path/filepath"
+	FP "path/filepath"
 	"strings"
 )
 
@@ -38,8 +38,8 @@ func (pLC *ListingConfig) String() string {
 
 // Generate starts the listing generation.
 func (g *ListingGenerator) Generate() error {
-	shortTemplatePath := filepath.Join("static", "short.html")
-	archiveLinkTemplatePath := filepath.Join("static", "archiveLink.html")
+	shortTemplatePath := FP.Join("static", "short.html")
+	archiveLinkTemplatePath := FP.Join("static", "archiveLink.html")
 	posts := g.Config.Posts
 	t := g.Config.Template
 	destination := g.Config.Dest
@@ -50,15 +50,15 @@ func (g *ListingGenerator) Generate() error {
 	}
 	var postBlocks []string
 	for _, post := range posts {
-		meta := post.Meta
-		link := fmt.Sprintf("/%s/", post.Name)
+		meta := post.PropSet
+		link := fmt.Sprintf("/%s/", post.DirBase)
 		ld := ListingData{
 			Title:      meta["title"],
 			Date:       meta["date"],
 			Short:      meta["short"],
 			Link:       link,
 			Tags:       createTags(meta["tags"]),
-			TimeToRead: calculateTimeToRead(string(post.HTML)),
+			TimeToRead: calculateTimeToRead(post.CntAsHTML),
 		}
 		block := bytes.Buffer{}
 		if err := short.Execute(&block, ld); err != nil {

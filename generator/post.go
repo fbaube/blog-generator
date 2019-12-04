@@ -9,26 +9,30 @@ import (
 	"github.com/alecthomas/chroma/lexers"
 	"github.com/alecthomas/chroma/styles"
 	"github.com/yuin/goldmark"
-	// "gopkg.in/yaml.v2"
 	"html/template"
 	"io/ioutil"
 	"os"
-	"path/filepath"
+	FP "path/filepath"
 	"strings"
 	"time"
+	"errors"
 	FU "github.com/fbaube/fileutils"
 	SU "github.com/fbaube/stringutils"
 )
 
 // Post holds data for a post.
 type Post struct {
-	Name      string
-	TheDir    FU.CheckedPath
-	ThePost   FU.CheckedPath
-	Meta      SU.PropSet
-	HTML      string
+	// Name      string
+	Dir      *FU.CheckedPath
+	DirBase	  string
+	File     *FU.CheckedPath
+	SU.PropSet
+	ContentMD string
+	CntAsHTML string
 	ImagesDir string
 	Images    []string
+	// YAML "ParsedDate" is taken from the PropSet
+	// as a string and then parsed into this field
 	ParsedDate time.Time
 }
 
@@ -58,44 +62,42 @@ func (g *PostGenerator) Generate() error {
 	post := g.Config.Post
 	destination := g.Config.Dest
 	t := g.Config.Template
-	fmt.Printf("\tGenerating Post: %s...\n", post.Meta["title"])
-	staticPath := filepath.Join(destination, post.Name)
-	if err := os.Mkdir(staticPath, os.ModePerm); err != nil {
-		return fmt.Errorf("error creating directory at %s: %v", staticPath, err)
+	fmt.Printf("\tGenerating Post: %s...\n", post.PropSet["title"])
+	staticDirPath := FP.Join(destination, post.DirBase)
+	if err := os.Mkdir(staticDirPath, os.ModePerm); err != nil {
+		return fmt.Errorf("error creating directory at %s: %w", staticDirPath, err)
 	}
 	if post.ImagesDir != "" {
-		if err := copyImagesDir(post.ImagesDir, staticPath); err != nil {
+		if err := copyImagesDir(post.ImagesDir, staticDirPath); err != nil {
 			return err
 		}
 	}
-	if err := WriteIndexHTML(g.Config.BlogProps, staticPath, post.Meta["title"],
-			post.Meta["short"], template.HTML(string(post.HTML)), t); err != nil {
+	if err := WriteIndexHTML(g.Config.BlogProps, staticDirPath, post.PropSet["title"],
+			post.PropSet["short"], template.HTML(post.CntAsHTML), t); err != nil {
 		return err
 	}
-	fmt.Printf("\tFinished generating Post: %s...\n", post.Meta["title"])
+	fmt.Printf("\tFinished generating Post: %s...\n", post.PropSet["title"])
 	return nil
 }
 
-func newPost(path, dateFormat string) (*Post, error) {
-	println("newPost:", path)
-
-	// Can ignore the post Markdown
-	postYamlMeta, _, postHtml, err := getPost(path)
-	if err != nil {
-		return nil, err
+func newPost(dirpath, dateFormat string) (p *Post, e error) {
+	println("newPost dir:", dirpath)
+	p, e = getPost(dirpath)
+	if e != nil {
+		return nil, e
 	}
-	println("newPost:", path, "||||", postHtml, "||||")
-	imagesDir, images, err := getImages(path)
-	if err != nil {
-		return nil, err
+	println("newPost:", dirpath, "||||", p.CntAsHTML, "||||")
+	p.ImagesDir, p.Images, e = getImages(dirpath)
+	if e != nil {
+		return nil, e
 	}
-	name := filepath.Base(path)
-
-	return &Post{Name: name, Meta: postYamlMeta, HTML: string(postHtml), ImagesDir: imagesDir, Images: images}, nil
+	p.DirBase = FP.Base(p.Dir.String())
+	return p, nil
+	// &Post{Name: name, PropSet: postYamlMeta, CntAsHTML: string(postHtml), ImagesDir: imagesDir, Images: images}, nil
 }
 
 func copyImagesDir(source, destination string) (err error) {
-	path := filepath.Join(destination, "images")
+	path := FP.Join(destination, "images")
 	if err := os.Mkdir(path, os.ModePerm); err != nil {
 		return fmt.Errorf("error creating images directory at %s: %v", path, err)
 	}
@@ -104,8 +106,8 @@ func copyImagesDir(source, destination string) (err error) {
 		return fmt.Errorf("error reading directory %s: %v", path, err)
 	}
 	for _, file := range files {
-		src := filepath.Join(source, file.Name())
-		dst := filepath.Join(path, file.Name())
+		src := FP.Join(source, file.Name())
+		dst := FP.Join(path, file.Name())
 		if err := copyFile(src, dst); err != nil {
 			return err
 		}
@@ -113,61 +115,46 @@ func copyImagesDir(source, destination string) (err error) {
 	return nil
 }
 
-/*
-func getMeta(path, dateFormat string) (SU.PropSet, error) {
-	filePath := filepath.Join(path, "meta.yml")
-	metaraw, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("error while reading file %s: %v", filePath, err)
-	}
-	meta := Meta{}
-	err = yaml.Unmarshal(metaraw, &meta)
-	if err != nil {
-		return nil, fmt.Errorf("error reading yml in %s: %v", filePath, err)
-	}
-	parsedDate, err := time.Parse(dateFormat, meta.Date)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing date in %s: %v", filePath, err)
-	}
-	meta.ParsedDate = parsedDate
-	return &meta, nil
-}
-*/
-
 // getPost reads "post.md" and returns the YAML header metadata, the
 // post's content Markdown, and the post's content converted to HTML.
-func getPost(path string) (hdrMeta SU.PropSet, cntMD, cntAsHtml string, err error) {
-	filePath := filepath.Join(path, "post.md")
-	input, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return nil, "", "", fmt.Errorf("error reading file <%s>: %w", filePath, err)
+func getPost(path string) (p *Post, e error) {
+	p = new(Post)
+	p.Dir = FU.NewCheckedPath(path)
+	if !(p.Dir.Exists && p.Dir.IsDir) {
+		return nil, errors.New("Not a readable directory: " + path)
 	}
+	postFP := FP.Join(path, "post.md")
+	p.File = FU.NewCheckedPath(postFP)
+	if !(p.File.Exists && p.File.IsFile) {
+		return nil, errors.New("Not a readable file: " + postFP)
+	}
+	p.File = p.File.LoadFile()
+	if e = p.File.GetError(); e != nil {
+		return nil, fmt.Errorf("Load file <%s> failed: %w", postFP, e)
+	}
+	println("RAW:", p.File.Raw)
 	// Try to evaluate YAML metadata header
 	// func GetYamlMetadata(instr string) (map[string]interface{}, string, error) {
-	psMeta, mdCont, e := SU.GetYamlMetadataAsPropSet(string(input))
-	if psMeta == nil {
-		panic("post.go: nil from Yaml")
-	}
+	p.PropSet, p.ContentMD, e = SU.GetYamlMetadataAsPropSet(p.File.Raw)
 	if e != nil {
 		panic("post.go: error from Yaml")
 	}
-	fmt.Printf("##>> getPost: PropSet: %+v \n", psMeta)
+	fmt.Printf("##>> getPost: PropSet: %+v \n", p.PropSet)
 	// Replace BlackFriday with Goldmark
 	// html := blackfriday.MarkdownCommon(input)
-	var htmlCont bytes.Buffer
-	if err := goldmark.Convert([]byte(mdCont), &htmlCont); err != nil {
-  	panic(err)
+	var bb bytes.Buffer
+	if e = goldmark.Convert([]byte(p.ContentMD), &bb); e != nil {
+  	panic(e)
 	}
-  html2 := []byte(htmlCont.String())
-	replaced, err := replaceCodeParts(html2)
-	if err != nil {
-		return nil, "", "", fmt.Errorf("error during syntax hiliting of %s: %v", filePath, err)
+	p.CntAsHTML, e = replaceCodeParts([]byte(bb.String()))
+	if e != nil {
+		return nil, fmt.Errorf("error during syntax hiliting of %s: %w", postFP, e)
 	}
-	return psMeta, mdCont, replaced, nil
+	return p, nil
 }
 
 func getImages(path string) (string, []string, error) {
-	dirPath := filepath.Join(path, "images")
+	dirPath := FP.Join(path, "images")
 	files, err := ioutil.ReadDir(dirPath)
 	if err != nil {
 		if os.IsNotExist(err) {

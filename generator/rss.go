@@ -48,7 +48,7 @@ func (g *RSSGenerator) Generate() error {
 
 	for _, post := range posts {
 		if err := addItem(channel, post, fmt.Sprintf("%s/%s/", g.Config.BlogProps["url"],
-				post.Name[1:]), g.Config.BlogProps["dateformat"]); err != nil {
+				post.DirBase[1:]), g.Config.BlogProps["dateformat"]); err != nil {
 			return err
 		}
 	}
@@ -67,7 +67,7 @@ func (g *RSSGenerator) Generate() error {
 }
 
 func addItem(element *etree.Element, post *Post, path, dateFormat string) error {
-	meta := post.Meta
+	meta := post.PropSet
 	item := element.CreateElement("item")
 	item.CreateElement("title").SetText(meta["title"])
 	item.CreateElement("link").SetText(path)
@@ -75,6 +75,6 @@ func addItem(element *etree.Element, post *Post, path, dateFormat string) error 
 	// pubDate, err := time.Parse(dateFormat, meta["date"])
 	pubDate := post.ParsedDate
 	item.CreateElement("pubDate").SetText(pubDate.Format(rssDateFormat))
-	item.CreateElement("description").SetText(string(post.HTML))
+	item.CreateElement("description").SetText(string(post.CntAsHTML))
 	return nil
 }
