@@ -9,26 +9,33 @@ import (
 	"github.com/alecthomas/chroma/lexers"
 	"github.com/alecthomas/chroma/styles"
 	"github.com/yuin/goldmark"
-	"gopkg.in/yaml.v2"
+	// "gopkg.in/yaml.v2"
 	"html/template"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+	FU "github.com/fbaube/fileutils"
+	SU "github.com/fbaube/stringutils"
 )
 
 // Post holds data for a post.
 type Post struct {
 	Name      string
-	HTML      string // []byte
-	Meta      *Meta
+	TheDir    FU.CheckedPath
+	ThePost   FU.CheckedPath
+	Meta      SU.PropSet
+	HTML      string
 	ImagesDir string
 	Images    []string
+	ParsedDate time.Time
 }
 
 // ByDateDesc is the sorting object for posts.
 type ByDateDesc []*Post
+//  dateFormat is for sorting posts
+var dateFormat string
 
 // PostGenerator object
 type PostGenerator struct {
@@ -51,7 +58,7 @@ func (g *PostGenerator) Generate() error {
 	post := g.Config.Post
 	destination := g.Config.Dest
 	t := g.Config.Template
-	fmt.Printf("\tGenerating Post: %s...\n", post.Meta.Title)
+	fmt.Printf("\tGenerating Post: %s...\n", post.Meta["title"])
 	staticPath := filepath.Join(destination, post.Name)
 	if err := os.Mkdir(staticPath, os.ModePerm); err != nil {
 		return fmt.Errorf("error creating directory at %s: %v", staticPath, err)
@@ -61,29 +68,30 @@ func (g *PostGenerator) Generate() error {
 			return err
 		}
 	}
-	if err := WriteIndexHTML(g.Config.BlogProps, staticPath, post.Meta.Title, post.Meta.Short, template.HTML(string(post.HTML)), t); err != nil {
+	if err := WriteIndexHTML(g.Config.BlogProps, staticPath, post.Meta["title"],
+			post.Meta["short"], template.HTML(string(post.HTML)), t); err != nil {
 		return err
 	}
-	fmt.Printf("\tFinished generating Post: %s...\n", post.Meta.Title)
+	fmt.Printf("\tFinished generating Post: %s...\n", post.Meta["title"])
 	return nil
 }
 
 func newPost(path, dateFormat string) (*Post, error) {
-	meta, err := getMeta(path, dateFormat)
+	println("newPost:", path)
+
+	// Can ignore the post Markdown
+	postYamlMeta, _, postHtml, err := getPost(path)
 	if err != nil {
 		return nil, err
 	}
-	html, err := getHTML(path)
-	if err != nil {
-		return nil, err
-	}
+	println("newPost:", path, "||||", postHtml, "||||")
 	imagesDir, images, err := getImages(path)
 	if err != nil {
 		return nil, err
 	}
 	name := filepath.Base(path)
 
-	return &Post{Name: name, Meta: meta, HTML: string(html), ImagesDir: imagesDir, Images: images}, nil
+	return &Post{Name: name, Meta: postYamlMeta, HTML: string(postHtml), ImagesDir: imagesDir, Images: images}, nil
 }
 
 func copyImagesDir(source, destination string) (err error) {
@@ -105,7 +113,8 @@ func copyImagesDir(source, destination string) (err error) {
 	return nil
 }
 
-func getMeta(path, dateFormat string) (*Meta, error) {
+/*
+func getMeta(path, dateFormat string) (SU.PropSet, error) {
 	filePath := filepath.Join(path, "meta.yml")
 	metaraw, err := ioutil.ReadFile(filePath)
 	if err != nil {
@@ -123,27 +132,38 @@ func getMeta(path, dateFormat string) (*Meta, error) {
 	meta.ParsedDate = parsedDate
 	return &meta, nil
 }
+*/
 
-func getHTML(path string) ([]byte, error) {
+// getPost reads "post.md" and returns the YAML header metadata, the
+// post's content Markdown, and the post's content converted to HTML.
+func getPost(path string) (hdrMeta SU.PropSet, cntMD, cntAsHtml string, err error) {
 	filePath := filepath.Join(path, "post.md")
 	input, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("error while reading file %s: %v", filePath, err)
+		return nil, "", "", fmt.Errorf("error reading file <%s>: %w", filePath, err)
 	}
-
+	// Try to evaluate YAML metadata header
+	// func GetYamlMetadata(instr string) (map[string]interface{}, string, error) {
+	psMeta, mdCont, e := SU.GetYamlMetadataAsPropSet(string(input))
+	if psMeta == nil {
+		panic("post.go: nil from Yaml")
+	}
+	if e != nil {
+		panic("post.go: error from Yaml")
+	}
+	fmt.Printf("##>> getPost: PropSet: %+v \n", psMeta)
 	// Replace BlackFriday with Goldmark
 	// html := blackfriday.MarkdownCommon(input)
-	var htmlBuf bytes.Buffer
-	if err := goldmark.Convert(input, &htmlBuf); err != nil {
+	var htmlCont bytes.Buffer
+	if err := goldmark.Convert([]byte(mdCont), &htmlCont); err != nil {
   	panic(err)
 	}
-  html2 := []byte(htmlBuf.String())
+  html2 := []byte(htmlCont.String())
 	replaced, err := replaceCodeParts(html2)
 	if err != nil {
-		return nil, fmt.Errorf("error during syntax hiliting of %s: %v", filePath, err)
+		return nil, "", "", fmt.Errorf("error during syntax hiliting of %s: %v", filePath, err)
 	}
-	return []byte(replaced), nil
-
+	return psMeta, mdCont, replaced, nil
 }
 
 func getImages(path string) (string, []string, error) {
@@ -207,5 +227,5 @@ func (p ByDateDesc) Swap(i, j int) {
 }
 
 func (p ByDateDesc) Less(i, j int) bool {
-	return p[i].Meta.ParsedDate.After(p[j].Meta.ParsedDate)
+	return p[i].ParsedDate.After(p[j].ParsedDate)
 }

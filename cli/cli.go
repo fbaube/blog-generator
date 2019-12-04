@@ -59,7 +59,7 @@ func Run() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Dirs to fetch from: %v \n", dirs)
+	fmt.Printf("Posts 2b-procest from working-dirs: %v \n", dirs)
 
 	g := generator.New(&generator.SiteConfig{
 		Sources: dirs,
@@ -84,8 +84,7 @@ func readConfig() (ps []SU.PropSet, e error) {
 	if e != nil || cfgMap == nil {
 		return nil, fmt.Errorf("Can't parse config: %w", e)
 	}
-	fmt.Printf("CFG-MAP: %+v \n", cfgMap)
-
+	fmt.Printf("YAML-CFG-MAP: %+v \n", cfgMap)
 	ps = make([]SU.PropSet, 3)
 	if cfgMap["generator"] == nil ||
 	   cfgMap["blog"]     == nil ||

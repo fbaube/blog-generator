@@ -25,18 +25,21 @@ type StaticsConfig struct {
 // Generate creates the static pages.
 func (g *StaticsGenerator) Generate() error {
 	fmt.Println("\tCopying Statics...")
-	fileToDestination := g.Config.FilesToDests
-	templateToFile := g.Config.TmplsToFiles
+	psFilesToDests := g.Config.FilesToDests
+	psTmplsToFiles := g.Config.TmplsToFiles
+	fmt.Printf("StcsGenr: FilesToDests: %+v \n", psFilesToDests)
+	fmt.Printf("StcsGenr: TmplsToFiles: %+v \n", psTmplsToFiles)
 	t := g.Config.Template
-	for k, v := range fileToDestination {
+	for k, v := range psFilesToDests {
 		if err := createFolderIfNotExist(getFolder(v)); err != nil {
 			return err
 		}
+		println("Calling copyFile:", k, v)
 		if err := copyFile(k, v); err != nil {
 			return err
 		}
 	}
-	for k, v := range templateToFile {
+	for k, v := range psTmplsToFiles {
 		if err := createFolderIfNotExist(getFolder(v)); err != nil {
 			return err
 		}
@@ -44,6 +47,7 @@ func (g *StaticsGenerator) Generate() error {
 		if err != nil {
 			return fmt.Errorf("error reading file %s: %v", k, err)
 		}
+		println("Calling WriteIndexHTML:", k, v)
 		if err := WriteIndexHTML(g.Config.BlogProps, getFolder(v), getTitle(k), getTitle(k), template.HTML(content), t); err != nil {
 			return err
 		}

@@ -10,10 +10,11 @@ import (
 	S "strings"
 	"strconv"
 	"sync"
-	"time"
+	// "time"
 )
 
 // Meta is a data container for per-post Metadata in a "meta.yaml".
+/*
 type Meta struct {
 	Title      string
 	Short      string
@@ -21,6 +22,7 @@ type Meta struct {
 	Tags       []string
 	ParsedDate time.Time
 }
+*/
 
 // IndexData is a data container for the landing page.
 type IndexData struct {
@@ -46,9 +48,9 @@ type SiteGenerator struct {
 
 // SiteConfig holds the sources and destination folder
 type SiteConfig struct {
-	Sources     []string
-	Dest string
-	Configs  []SU.PropSet
+	Sources    []string
+	Dest         string
+	Configs []SU.PropSet
 }
 
 // New creates a new SiteGenerator.
@@ -58,22 +60,29 @@ func New(config *SiteConfig) *SiteGenerator {
 
 // Generate starts the static blog generation.
 func (g *SiteGenerator) Generate() error {
-	templatePath := filepath.Join("static", "template.html")
-	fmt.Println("Generating Site...")
+	masterPageTemplatePath := filepath.Join("static", "masterpagetemplate.html")
 	sources := g.StConfig.Sources
 	destination := g.StConfig.Dest
+	fmt.Printf("##>> SiteGenr: dest<%s>; sources: %+v \n", destination, sources)
+
+	// Clear the WWW output directory and its "archive" subdirectory
 	if err := clearAndCreateDestination(destination); err != nil {
 		return err
 	}
 	if err := clearAndCreateDestination(filepath.Join(destination, "archive")); err != nil {
 		return err
 	}
-	t, err := getTemplate(templatePath)
+
+	// Get the master page template
+	masterPageTemplate, err := getTemplate(masterPageTemplatePath)
 	if err != nil {
 		return err
 	}
+
+	// Get all the posts
 	var posts []*Post
 	for _, path := range sources {
+		println("##>> Adding post, from wrkg-dir:", path)
 		post, err := newPost(path, g.StConfig.Configs[1]["dateformat"])
 		if err != nil {
 			return err
@@ -81,14 +90,14 @@ func (g *SiteGenerator) Generate() error {
 		posts = append(posts, post)
 	}
 	sort.Sort(ByDateDesc(posts))
-	if err := runTasks(posts, t, destination, g.StConfig.Configs); err != nil {
+	if err := runTasks(posts, masterPageTemplate, destination, g.StConfig.Configs); err != nil {
 		return err
 	}
 	fmt.Println("Finished generating Site...")
 	return nil
 }
 
-func runTasks(posts []*Post, t *template.Template, destination string,
+func runTasks(posts []*Post, masterPageTemplate *template.Template, destination string,
 		cfgs []SU.PropSet) error {
 
 	var wg sync.WaitGroup
@@ -96,7 +105,7 @@ func runTasks(posts []*Post, t *template.Template, destination string,
 	errs := make(chan error, 1)
 	pool := make(chan struct{}, 50)
 	generators := []Generator{}
-	indexWriter := cfgs[1] // NewIndexWriter(cfgs)
+	blogProps := cfgs[1]
 	// ==========================
 	//   POSTS
 	// ==========================
@@ -104,11 +113,12 @@ func runTasks(posts []*Post, t *template.Template, destination string,
 		pPC := new(PostConfig)
 		pPC.Post = post
 		pPC.Dest = destination
-		pPC.Template = t
-		pPC.BlogProps = indexWriter
+		pPC.Template = masterPageTemplate
+		pPC.BlogProps = blogProps
 		println(pPC.String())
 		pg := PostGenerator{pPC}
 		generators = append(generators, &pg)
+		fmt.Printf("##>> Ready post: %+v |||| \n", *pPC)
 	}
 	tagPostsMap := createTagPostsMap(posts)
 	// ==========================
@@ -117,10 +127,10 @@ func runTasks(posts []*Post, t *template.Template, destination string,
 	nrposts, _ := strconv.Atoi(cfgs[1]["frontpageposts"])
 	pLC := new(ListingConfig)
 	pLC.Posts = posts[:getNumOfPagesOnFrontpage(posts, nrposts)]
-	pLC.Template = t
+	pLC.Template = masterPageTemplate
 	pLC.Dest = destination
 	pLC.PageTitle = ""
-	pLC.BlogProps = indexWriter
+	pLC.BlogProps = blogProps
 	pLC.IsIndex = true
 	println(pLC.String())
 	fg := ListingGenerator{pLC}
@@ -129,10 +139,10 @@ func runTasks(posts []*Post, t *template.Template, destination string,
 	// ==========================
 	pAC := new(ListingConfig)
 	pAC.Posts = posts
-	pAC.Template = t
+	pAC.Template = masterPageTemplate
 	pAC.Dest = filepath.Join(destination, "archive")
 	pAC.PageTitle = "Archive"
-	pAC.BlogProps =  indexWriter
+	pAC.BlogProps = blogProps
 	pAC.IsIndex = false
 	println(pAC.String())
 	ag := ListingGenerator{pAC}
@@ -141,9 +151,9 @@ func runTasks(posts []*Post, t *template.Template, destination string,
 	// ==========================
 	pTC := new(TagsConfig)
 	pTC.TagPostsMap = tagPostsMap
-	pTC.Template = t
+	pTC.Template = masterPageTemplate
 	pTC.Dest = destination
-	pTC.BlogProps =  indexWriter
+	pTC.BlogProps = blogProps
 	println("TagsCfg:", pTC.BaseConfig.String(),
 		fmt.Sprintf("; \n\t TagPostsMap: %+v", pTC.TagPostsMap))
 	tg := TagsGenerator{pTC}
@@ -182,22 +192,28 @@ func runTasks(posts []*Post, t *template.Template, destination string,
 	// ==========================
 	//   STATICS
 	// ==========================
-	fileToDestination := map[string]string{}
+	pSC := new(StaticsConfig)
+	// ==========================
+	//   FILES ????
+	// ==========================
+	psFilesToDests := SU.PropSet{} // map[string]string{}
 	for _, static := range files {
-		fileToDestination["static/" + static] = filepath.Join(destination, static) // .Dest)
+		psFilesToDests["static/" + static] = filepath.Join(destination, static) // .Dest)
 	}
 	// ==========================
 	//   TEMPLATES
 	// ==========================
-	templateToFile := map[string]string{}
+	psTmplsToFiles := SU.PropSet{} // map[string]string{}
 	for _, static := range tmpls {
-		templateToFile["static/" + static] = filepath.Join(destination, static, "index.html")
+		psTmplsToFiles["static/" + static] = filepath.Join(destination, static, "index.html")
 	}
-	pSC := new(StaticsConfig)
-	pSC.FilesToDests = fileToDestination
-	pSC.TmplsToFiles = templateToFile
-	pSC.Template = t
-	pSC.BlogProps = indexWriter
+	// ==========================
+	//   TEMPLATES
+	// ==========================
+	pSC.FilesToDests = psFilesToDests
+	pSC.TmplsToFiles = psTmplsToFiles
+	pSC.Template = masterPageTemplate
+	pSC.BlogProps = blogProps
 	fmt.Printf("StcsCfg: %s; \n\t %+v %+v \n",
 		pSC.BaseConfig.String(), pSC.FilesToDests, pSC.TmplsToFiles)
 	statg := StaticsGenerator{pSC}
@@ -250,7 +266,8 @@ func getHTMLTitle(pageTitle, blogTitle string) string {
 func createTagPostsMap(posts []*Post) map[string][]*Post {
 	result := make(map[string][]*Post)
 	for _, post := range posts {
-		for _, tag := range post.Meta.Tags {
+		tags := S.Split(post.Meta["tags"], " ")
+		for _, tag := range tags { // post.Meta.Tags {
 			key := S.ToLower(tag)
 			if result[key] == nil {
 				result[key] = []*Post{post}

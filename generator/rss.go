@@ -18,9 +18,7 @@ type RSSGenerator struct {
 type RSSConfig struct {
 	Posts    []*Post
 	Dest        string
-	// DateFormat  string
-	// Language    string
-	BlogProps   SU.PropSet // IndexWriter
+	BlogProps   SU.PropSet
 }
 
 const rssDateFormat string = "02 Jan 2006 15:04 -0700"
@@ -71,13 +69,11 @@ func (g *RSSGenerator) Generate() error {
 func addItem(element *etree.Element, post *Post, path, dateFormat string) error {
 	meta := post.Meta
 	item := element.CreateElement("item")
-	item.CreateElement("title").SetText(meta.Title)
+	item.CreateElement("title").SetText(meta["title"])
 	item.CreateElement("link").SetText(path)
 	item.CreateElement("guid").SetText(path)
-	pubDate, err := time.Parse(dateFormat, meta.Date)
-	if err != nil {
-		return fmt.Errorf("error parsing date %s: %v", meta.Date, err)
-	}
+	// pubDate, err := time.Parse(dateFormat, meta["date"])
+	pubDate := post.ParsedDate
 	item.CreateElement("pubDate").SetText(pubDate.Format(rssDateFormat))
 	item.CreateElement("description").SetText(string(post.HTML))
 	return nil

@@ -6,7 +6,7 @@ import (
 	"html/template"
 	"path/filepath"
 	"sort"
-	"strings"
+	S "strings"
 	SU "github.com/fbaube/stringutils"
 )
 
@@ -96,8 +96,9 @@ func generateTagPage(tag string, posts []*Post, t *template.Template,
 	return nil
 }
 
-func createTags(tags []string) []*Tag {
+func createTags(tagstr string) []*Tag {
 	var result []*Tag
+	tags := S.Split(tagstr, " ")
 	for _, tag := range tags {
 		result = append(result, &Tag{Name: tag, Link: getTagLink(tag)})
 	}
@@ -105,7 +106,7 @@ func createTags(tags []string) []*Tag {
 }
 
 func getTagLink(tag string) string {
-	return fmt.Sprintf("/tags/%s/", strings.ToLower(tag))
+	return fmt.Sprintf("/tags/%s/", S.ToLower(tag))
 }
 
 func (t ByCountDesc) Len() int {

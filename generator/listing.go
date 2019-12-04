@@ -53,11 +53,11 @@ func (g *ListingGenerator) Generate() error {
 		meta := post.Meta
 		link := fmt.Sprintf("/%s/", post.Name)
 		ld := ListingData{
-			Title:      meta.Title,
-			Date:       meta.Date,
-			Short:      meta.Short,
+			Title:      meta["title"],
+			Date:       meta["date"],
+			Short:      meta["short"],
 			Link:       link,
-			Tags:       createTags(meta.Tags),
+			Tags:       createTags(meta["tags"]),
 			TimeToRead: calculateTimeToRead(string(post.HTML)),
 		}
 		block := bytes.Buffer{}
