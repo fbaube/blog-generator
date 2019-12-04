@@ -54,7 +54,7 @@ type PostConfig struct {
 
 func (pPC *PostConfig) String() string {
 	return fmt.Sprintf("PostCfg: %s; \n\t Post: %+v",
-			pPC.BaseConfig.String(), pPC.Post)
+			pPC.BaseConfig.String(), *pPC.Post)
 }
 
 // Generate generates a post.
@@ -86,7 +86,7 @@ func newPost(dirpath, dateFormat string) (p *Post, e error) {
 	if e != nil {
 		return nil, e
 	}
-	println("newPost:", dirpath, "||||", p.CntAsHTML, "||||")
+	// println("newPost:", dirpath, "||||", p.CntAsHTML, "||||")
 	p.ImagesDir, p.Images, e = getImages(dirpath)
 	if e != nil {
 		return nil, e
@@ -130,9 +130,9 @@ func getPost(path string) (p *Post, e error) {
 	}
 	p.File = p.File.LoadFile()
 	if e = p.File.GetError(); e != nil {
-		return nil, fmt.Errorf("Load file <%s> failed: %w", postFP, e)
+		return nil, fmt.Errorf("Can't load file <%s>: %w", postFP, e)
 	}
-	println("RAW:", p.File.Raw)
+	// println("RAW:", p.File.Raw)
 	// Try to evaluate YAML metadata header
 	// func GetYamlMetadata(instr string) (map[string]interface{}, string, error) {
 	p.PropSet, p.ContentMD, e = SU.GetYamlMetadataAsPropSet(p.File.Raw)

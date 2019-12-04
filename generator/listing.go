@@ -32,7 +32,7 @@ type ListingConfig struct {
 }
 
 func (pLC *ListingConfig) String() string {
-	return fmt.Sprintf("ListCfg: %s; \n\t PgTtl<%s> IsIdx?<%t> Posts: %+v",
+	return fmt.Sprintf("LstgCfg: %s; \n\t PgTtl<%s> IsIdx?<%t> Posts: %+v",
 			pLC.BaseConfig.String(), pLC.PageTitle, pLC.IsIndex, pLC.Posts)
 }
 

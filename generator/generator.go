@@ -115,10 +115,10 @@ func runTasks(posts []*Post, masterPageTemplate *template.Template, destination 
 		pPC.Dest = destination
 		pPC.Template = masterPageTemplate
 		pPC.BlogProps = blogProps
-		println(pPC.String())
+		// println(pPC.String())
 		pg := PostGenerator{pPC}
 		generators = append(generators, &pg)
-		fmt.Printf("##>> Ready post: %+v |||| \n", *pPC)
+		// fmt.Printf("##>> Ready post: %+v |||| \n", *pPC)
 	}
 	tagPostsMap := createTagPostsMap(posts)
 	// ==========================
@@ -132,7 +132,7 @@ func runTasks(posts []*Post, masterPageTemplate *template.Template, destination 
 	pLC.PageTitle = ""
 	pLC.BlogProps = blogProps
 	pLC.IsIndex = true
-	println(pLC.String())
+	// println(pLC.String())
 	fg := ListingGenerator{pLC}
 	// ==========================
 	//   ARCHIVE
@@ -144,7 +144,7 @@ func runTasks(posts []*Post, masterPageTemplate *template.Template, destination 
 	pAC.PageTitle = "Archive"
 	pAC.BlogProps = blogProps
 	pAC.IsIndex = false
-	println(pAC.String())
+	// println(pAC.String())
 	ag := ListingGenerator{pAC}
 	// ==========================
 	//   TAGS
