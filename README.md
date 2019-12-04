@@ -2,7 +2,7 @@
 
 # blog-generator
 
-A static blog generator that collects posts written in Markdown from the local file system (OR a configurable GitHub repository). A post has metadata in a YAML fie header. The code that this is forked from has [this](https://github.com/zupzup/blog) is an example repo for the blog at [https://zupzup.org/](https://zupzup.org/).
+A static blog generator that collects posts written in Markdown from the local file system (OR a configurable GitHub repository). A post has metadata in a YAML file header. The code that this is forked from has [this](https://github.com/zupzup/blog) is an example repo for the blog at [https://zupzup.org/](https://zupzup.org/).
 
 ## Features
 
@@ -25,9 +25,9 @@ go get github.com/fbaube/bloggenator
 
 ### Configuration
 
-The tool can be configured using a config file called `bloggen.yml`. There is a `bloggen.dist.yml.FS` in the repository you can use as a template.
+The tool can be configured using a config file called `bloggen.yml`. There is a `bloggen.yml.FS` in the repository you can use as a template.
 
-Example Config File: (THIS EXAMPLE CONFIG IS OBSOLETE!)
+Example Config File: (OBSOLETE - FORMAT HAS CHANGED!)
 
 ```yml
 generator:
