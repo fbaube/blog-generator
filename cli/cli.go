@@ -86,12 +86,12 @@ func readConfig() (ps []SU.PropSet, e error) {
 	}
 	fmt.Printf("YAML-CFG-MAP: %+v \n", cfgMap)
 	ps = make([]SU.PropSet, 3)
-	if cfgMap["generator"] == nil ||
-	   cfgMap["blog"]     == nil ||
+	if cfgMap["folders"] == nil ||
+	   cfgMap["blog"]    == nil ||
 		 cfgMap["statics"] == nil {
 			panic("nil's in cli.go")
 		}
-	ps[0] = SU.YamlMapAsPropSet(cfgMap["generator"].(map[interface{}]interface{}))
+	ps[0] = SU.YamlMapAsPropSet(cfgMap["folders"].(map[interface{}]interface{}))
 	ps[1] = SU.YamlMapAsPropSet(cfgMap["blog"].(map[interface{}]interface{}))
 	ps[2] = SU.YamlMapAsPropSet(cfgMap["statics"].(map[interface{}]interface{}))
 	if ps[0]["repo"] == "" {
