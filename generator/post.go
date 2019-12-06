@@ -108,7 +108,7 @@ func copyImagesDir(source, destination string) (err error) {
 	for _, file := range files {
 		src := FP.Join(source, file.Name())
 		dst := FP.Join(path, file.Name())
-		if err := copyFile(src, dst); err != nil {
+		if err := FU.CopyFileFromTo(src, dst); err != nil {
 			return err
 		}
 	}

@@ -3,11 +3,11 @@ package generator
 import (
 	"fmt"
 	"html/template"
-	"io"
 	"io/ioutil"
 	"os"
-	"path/filepath"
+	FP "path/filepath"
 	"strings"
+  FU "github.com/fbaube/fileutils"
 )
 
 // StaticsGenerator object
@@ -19,7 +19,7 @@ type StaticsGenerator struct {
 type StaticsConfig struct {
 	FilesToDests map[string]string
 	TmplsToFiles map[string]string
-	BaseConfig // NOTE that field Dest is not used
+	BaseConfig
 }
 
 // Generate creates the static pages.
@@ -30,17 +30,14 @@ func (g *StaticsGenerator) Generate() error {
 	fmt.Printf("StcsGenr: FilesToDests: %+v \n", psFilesToDests)
 	fmt.Printf("StcsGenr: TmplsToFiles: %+v \n", psTmplsToFiles)
 	t := g.Config.Template
-	for k, v := range psFilesToDests {
-		if err := createFolderIfNotExist(getFolder(v)); err != nil {
-			return err
-		}
-		println("Calling copyFile:", k, v)
-		if err := copyFile(k, v); err != nil {
-			return err
-		}
+	// Both arguments should be directories !!
+	// func CopyDirRecursivelyFromTo(srcFrom string, dstTo string) error {
+  if err := FU.CopyDirRecursivelyFromTo("static", g.Config.Dest); err != nil {
+		return err
 	}
+
 	for k, v := range psTmplsToFiles {
-		if err := createFolderIfNotExist(getFolder(v)); err != nil {
+		if err := createFolderIfNotExist(FP.Dir(v)); err != nil {
 			return err
 		}
 		content, err := ioutil.ReadFile(k)
@@ -48,7 +45,7 @@ func (g *StaticsGenerator) Generate() error {
 			return fmt.Errorf("error reading file %s: %v", k, err)
 		}
 		println("Calling WriteIndexHTML:", k, v)
-		if err := WriteIndexHTML(g.Config.BlogProps, getFolder(v), getTitle(k), getTitle(k), template.HTML(content), t); err != nil {
+		if err := WriteIndexHTML(g.Config.BlogProps, FP.Dir(v), getTitle(k), getTitle(k), template.HTML(content), t); err != nil {
 			return err
 		}
 	}
@@ -69,6 +66,7 @@ func createFolderIfNotExist(path string) error {
 	return nil
 }
 
+/*
 func copyFile(src, dst string) (err error) {
 	in, err := os.Open(src)
 	if err != nil {
@@ -92,14 +90,11 @@ func copyFile(src, dst string) (err error) {
 	}
 	return nil
 }
-
-func getFolder(path string) string {
-	return filepath.Dir(path)
-}
+*/
 
 func getTitle(path string) string {
-	ext := filepath.Ext(path)
-	name := filepath.Base(path)
+	ext := FP.Ext(path)
+	name := FP.Base(path)
 	fileName := name[:len(name)-len(ext)]
 	return fmt.Sprintf("%s%s", strings.ToUpper(string(fileName[0])), fileName[1:])
 }

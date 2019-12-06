@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
-	"path/filepath"
+	FP "path/filepath"
 	"sort"
 	S "strings"
 	SU "github.com/fbaube/stringutils"
@@ -37,7 +37,7 @@ func (g *TagsGenerator) Generate() error {
 	tagPostsMap := g.Config.TagPostsMap
 	t := g.Config.Template
 	destination := g.Config.Dest
-	tagsPath := filepath.Join(destination, "tags")
+	tagsPath := FP.Join(destination, "tags")
 	if err := clearAndCreateDestination(tagsPath); err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func (g *TagsGenerator) Generate() error {
 		return err
 	}
 	for tag, tagPosts := range tagPostsMap {
-		tagPagePath := filepath.Join(tagsPath, tag)
+		tagPagePath := FP.Join(tagsPath, tag)
 		if err := generateTagPage(tag, tagPosts, t, tagPagePath, g.Config.BlogProps); err != nil {
 			return err
 		}
@@ -56,7 +56,7 @@ func (g *TagsGenerator) Generate() error {
 
 func generateTagIndex(tagPostsMap map[string][]*Post, t *template.Template,
 		destination string, blogProps SU.PropSet) error {
-	tagsTemplatePath := filepath.Join("static", "tags.html")
+	tagsTemplatePath := FP.Join("template", "tags.html")
 	tmpl, err := getTemplate(tagsTemplatePath)
 	if err != nil {
 		return err

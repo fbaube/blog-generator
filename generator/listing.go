@@ -38,8 +38,8 @@ func (pLC *ListingConfig) String() string {
 
 // Generate starts the listing generation.
 func (g *ListingGenerator) Generate() error {
-	shortTemplatePath := FP.Join("static", "short.html")
-	archiveLinkTemplatePath := FP.Join("static", "archiveLink.html")
+	shortTemplatePath := FP.Join("template", "short.html")
+	archiveLinkTemplatePath := FP.Join("template", "archiveLink.html")
 	posts := g.Config.Posts
 	t := g.Config.Template
 	destination := g.Config.Dest
