@@ -210,13 +210,13 @@ func runTasks(posts []*Post, masterPageTemplate *template.Template, destination 
 	// ==========================
 	//   TEMPLATES
 	// ==========================
-	pSC.FilesToDests = psFilesToDests
+	// pSC.FilesToDests = psFilesToDests
 	pSC.TmplsToFiles = psTmplsToFiles
 	pSC.Dest = cfgs[0]["dest"]
 	pSC.Template = masterPageTemplate
 	pSC.BlogProps = blogProps
-	fmt.Printf("StcsCfg: %s; \n\t %+v %+v \n",
-		pSC.BaseConfig.String(), pSC.FilesToDests, pSC.TmplsToFiles)
+	fmt.Printf("StcsCfg: %s; \n\t %+v \n",
+		pSC.BaseConfig.String(), pSC.TmplsToFiles) // pSC.FilesToDests,
 	statg := StaticsGenerator{pSC}
 	generators = append(generators, &fg, &ag, &tg, &sg, &rg, &statg)
 

@@ -17,7 +17,6 @@ type StaticsGenerator struct {
 
 // StaticsConfig holds the data for the static sites.
 type StaticsConfig struct {
-	FilesToDests map[string]string
 	TmplsToFiles map[string]string
 	BaseConfig
 }
@@ -25,9 +24,7 @@ type StaticsConfig struct {
 // Generate creates the static pages.
 func (g *StaticsGenerator) Generate() error {
 	fmt.Println("\tCopying Statics...")
-	psFilesToDests := g.Config.FilesToDests
 	psTmplsToFiles := g.Config.TmplsToFiles
-	fmt.Printf("StcsGenr: FilesToDests: %+v \n", psFilesToDests)
 	fmt.Printf("StcsGenr: TmplsToFiles: %+v \n", psTmplsToFiles)
 	t := g.Config.Template
 	// Both arguments should be directories !!
@@ -65,32 +62,6 @@ func createFolderIfNotExist(path string) error {
 	}
 	return nil
 }
-
-/*
-func copyFile(src, dst string) (err error) {
-	in, err := os.Open(src)
-	if err != nil {
-		return fmt.Errorf("error reading file %s: %v", src, err)
-	}
-	defer in.Close()
-	out, err := os.Create(dst)
-	if err != nil {
-		return fmt.Errorf("error creating file %s: %v", dst, err)
-	}
-	defer func() {
-		if e := out.Close(); e != nil {
-			err = e
-		}
-	}()
-	if _, err := io.Copy(out, in); err != nil {
-		return fmt.Errorf("error writing file %s: %v", dst, err)
-	}
-	if err := out.Sync(); err != nil {
-		return fmt.Errorf("error writing file %s: %v", dst, err)
-	}
-	return nil
-}
-*/
 
 func getTitle(path string) string {
 	ext := FP.Ext(path)
