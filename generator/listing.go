@@ -42,7 +42,7 @@ func (g *ListingGenerator) Generate() error {
 	archiveLinkTemplatePath := FP.Join("template", "archiveLink.html")
 	posts := g.Config.Posts
 	t := g.Config.Template
-	destination := g.Config.Dest
+	destDirPath := g.Config.Dest
 	pageTitle := g.Config.PageTitle
 	short, err := getTemplate(shortTemplatePath)
 	if err != nil {
@@ -79,7 +79,7 @@ func (g *ListingGenerator) Generate() error {
 		htmlBlocks = template.HTML(fmt.Sprintf("%s%s", htmlBlocks, template.HTML(lastBlock.String())))
 	}
 	if err := // g.Config.IndexWriter.WriteIndexHTML(destination, pageTitle, pageTitle, htmlBlocks, t); err != nil {
-		WriteIndexHTML(g.Config.BlogProps, destination, pageTitle, pageTitle, htmlBlocks, t); err != nil {
+		WriteIndexHTML(g.Config.BlogProps, destDirPath, pageTitle, pageTitle, htmlBlocks, t); err != nil {
 		return err
 	}
 	return nil

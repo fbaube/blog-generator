@@ -7,6 +7,7 @@ import (
 	FP "path/filepath"
 	"sort"
 	S "strings"
+	FU "github.com/fbaube/fileutils"
 	SU "github.com/fbaube/stringutils"
 )
 
@@ -36,16 +37,15 @@ func (g *TagsGenerator) Generate() error {
 	fmt.Println("\tGenerating Tags...")
 	tagPostsMap := g.Config.TagPostsMap
 	t := g.Config.Template
-	destination := g.Config.Dest
-	tagsPath := FP.Join(destination, "tags")
-	if err := clearAndCreateDestination(tagsPath); err != nil {
+	tagsDestDirPath := FP.Join(g.Config.Dest, "tags")
+	if err := FU.ClearAndCreateDirectory(tagsDestDirPath); err != nil {
 		return err
 	}
-	if err := generateTagIndex(tagPostsMap, t, tagsPath, g.Config.BlogProps); err != nil {
+	if err := generateTagIndex(tagPostsMap, t, tagsDestDirPath, g.Config.BlogProps); err != nil {
 		return err
 	}
 	for tag, tagPosts := range tagPostsMap {
-		tagPagePath := FP.Join(tagsPath, tag)
+		tagPagePath := FP.Join(tagsDestDirPath, tag)
 		if err := generateTagPage(tag, tagPosts, t, tagPagePath, g.Config.BlogProps); err != nil {
 			return err
 		}
@@ -55,7 +55,7 @@ func (g *TagsGenerator) Generate() error {
 }
 
 func generateTagIndex(tagPostsMap map[string][]*Post, t *template.Template,
-		destination string, blogProps SU.PropSet) error {
+		destDirPath string, blogProps SU.PropSet) error {
 	tagsTemplatePath := FP.Join("template", "tags.html")
 	tmpl, err := getTemplate(tagsTemplatePath)
 	if err != nil {
@@ -70,7 +70,7 @@ func generateTagIndex(tagPostsMap map[string][]*Post, t *template.Template,
 	if err := tmpl.Execute(&buf, tags); err != nil {
 		return fmt.Errorf("error executing template %s: %v", tagsTemplatePath, err)
 	}
-	if err := WriteIndexHTML(blogProps, destination, "Tags", "Tags", template.HTML(buf.String()), t); err != nil {
+	if err := WriteIndexHTML(blogProps, destDirPath, "Tags", "Tags", template.HTML(buf.String()), t); err != nil {
 		return err
 	}
 	return nil
@@ -78,7 +78,7 @@ func generateTagIndex(tagPostsMap map[string][]*Post, t *template.Template,
 
 func generateTagPage(tag string, posts []*Post, t *template.Template,
 		destination string, blogProps SU.PropSet) error {
-	if err := clearAndCreateDestination(destination); err != nil {
+	if err := FU.ClearAndCreateDirectory(destination); err != nil {
 		return err
 	}
 	pLC := new(ListingConfig)

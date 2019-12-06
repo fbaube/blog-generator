@@ -14,16 +14,16 @@ import (
 )
 
 // WriteIndexHTML writes an index.html file.
-// func (i *IndexWriter) WriteIndexHTML(path, pageTitle, metaDescription string, content template.HTML, t *template.Template) error {
-func WriteIndexHTML(blogProps SU.PropSet, path, pageTitle, metaDescription string, content template.HTML, t *template.Template) error {
-	filePath := filepath.Join(path, "index.html")
+func WriteIndexHTML(blogProps SU.PropSet, destDirPath, pageTitle,
+		aMetaDesc string, content template.HTML, t *template.Template) error {
+	filePath := filepath.Join(destDirPath, "index.html")
 	f, err := os.Create(filePath)
 	if err != nil {
 		return fmt.Errorf("error creating file %s: %v", filePath, err)
 	}
 	defer f.Close()
-	metaDesc := metaDescription
-	if metaDescription == "" {
+	metaDesc := aMetaDesc
+	if aMetaDesc == "" {
 		metaDesc = blogProps["description"]
 	}
 	hlbuf := bytes.Buffer{}
@@ -32,13 +32,20 @@ func WriteIndexHTML(blogProps SU.PropSet, path, pageTitle, metaDescription strin
 	formatter.WriteCSS(hlw, styles.MonokaiLight)
 	hlw.Flush()
 	w := bufio.NewWriter(f)
+
+	// var blogTitle, htmlTitle string
+	blogTitle := blogProps["title"]
+	htmlTitle := blogTitle
+	if pageTitle != "" {
+		htmlTitle = fmt.Sprintf("%s - %s", pageTitle, blogTitle)
+	}
 	td := IndexData{
 		Name:            blogProps["author"],
 		Year:            time.Now().Year(),
-		HTMLTitle:       getHTMLTitle(pageTitle, blogProps["title"]),
+		HTMLTitle:       htmlTitle,
 		PageTitle:       pageTitle,
 		Content:         content,
-		CanonicalLink:   buildCanonicalLink(path, blogProps["url"]),
+		CanonicalLink:   buildCanonicalLink(destDirPath, blogProps["url"]),
 		MetaDescription: metaDesc,
 		HighlightCSS:    template.CSS(hlbuf.String()),
 	}

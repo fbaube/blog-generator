@@ -2,15 +2,14 @@ package generator
 
 import (
 	"fmt"
+	FU "github.com/fbaube/fileutils"
 	SU "github.com/fbaube/stringutils"
 	"html/template"
-	"os"
 	"path/filepath"
 	"sort"
 	S "strings"
 	"strconv"
 	"sync"
-	// "time"
 )
 
 // Meta is a data container for per-post Metadata in a "meta.yaml".
@@ -66,10 +65,10 @@ func (g *SiteGenerator) Generate() error {
 	fmt.Printf("##>> SiteGenr: dest<%s>; sources: %+v \n", destination, sources)
 
 	// Clear the WWW output directory and its "archive" subdirectory
-	if err := clearAndCreateDestination(destination); err != nil {
+	if err := FU.ClearAndCreateDirectory(destination); err != nil {
 		return err
 	}
-	if err := clearAndCreateDestination(filepath.Join(destination, "archive")); err != nil {
+	if err := FU.ClearAndCreateDirectory(filepath.Join(destination, "archive")); err != nil {
 		return err
 	}
 
@@ -246,22 +245,6 @@ func runTasks(posts []*Post, masterPageTemplate *template.Template, destination 
 		}
 	}
 	return nil
-}
-
-func clearAndCreateDestination(path string) error {
-	if err := os.RemoveAll(path); err != nil {
-		if !os.IsNotExist(err) {
-			return fmt.Errorf("error removing folder at destination %s: %v ", path, err)
-		}
-	}
-	return os.Mkdir(path, os.ModePerm)
-}
-
-func getHTMLTitle(pageTitle, blogTitle string) string {
-	if pageTitle == "" {
-		return blogTitle
-	}
-	return fmt.Sprintf("%s - %s", pageTitle, blogTitle)
 }
 
 func createTagPostsMap(posts []*Post) map[string][]*Post {
