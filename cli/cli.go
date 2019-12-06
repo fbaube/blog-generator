@@ -23,14 +23,17 @@ func Run() {
 	repo = cfgs[0]["repo"]
 	hasProtocol := S.Contains(repo, "://")
 	idxProtocol := S.Index(repo, "://")
+	// If is http[s]://...
 	if hasProtocol && S.HasPrefix(repo, "http") {
 		fmt.Printf("Repo protocol is %s... \n", repo[:idxProtocol+3])
 		dstype = "git"
+	// If is obvisouly a filepath
 	} else if S.HasPrefix(repo, "file://") || path.IsAbs(repo) {
 		fmt.Printf("Repo is a directory... \n")
 		dstype = "filesystem"
-	} else {
-		log.Fatal(fmt.Errorf("unknown protocol: %s", repo))
+	} else { // hope it is an OK relative path
+		fmt.Printf("Repo appears to be a relative path to a directory... \n")
+		dstype = "filesystem"
 	}
 	println("Data source type:", dstype)
 	// Check that arguments are OK
