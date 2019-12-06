@@ -27,7 +27,7 @@ type Meta struct {
 type IndexData struct {
 	HTMLTitle       string
 	PageTitle       string
-	Content         template.HTML
+	HtmlCntFrag     template.HTML
 	Year            int
 	Name            string
 	CanonicalLink   string

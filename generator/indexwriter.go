@@ -15,7 +15,7 @@ import (
 
 // WriteIndexHTML writes an index.html file.
 func WriteIndexHTML(blogProps SU.PropSet, destDirPath, pageTitle,
-		aMetaDesc string, content template.HTML, t *template.Template) error {
+		aMetaDesc string, htmlContentFrag template.HTML, t *template.Template) error {
 	filePath := filepath.Join(destDirPath, "index.html")
 	f, err := os.Create(filePath)
 	if err != nil {
@@ -44,7 +44,7 @@ func WriteIndexHTML(blogProps SU.PropSet, destDirPath, pageTitle,
 		Year:            time.Now().Year(),
 		HTMLTitle:       htmlTitle,
 		PageTitle:       pageTitle,
-		Content:         content,
+		HtmlCntFrag:     htmlContentFrag,
 		CanonicalLink:   buildCanonicalLink(destDirPath, blogProps["url"]),
 		MetaDescription: metaDesc,
 		HighlightCSS:    template.CSS(hlbuf.String()),

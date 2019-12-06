@@ -66,11 +66,12 @@ func generateTagIndex(tagPostsMap map[string][]*Post, t *template.Template,
 		tags = append(tags, &Tag{Name: tag, Link: getTagLink(tag), Count: len(posts)})
 	}
 	sort.Sort(ByCountDesc(tags))
-	buf := bytes.Buffer{}
-	if err := tmpl.Execute(&buf, tags); err != nil {
+	execdTmplOutput := bytes.Buffer{}
+	if err := tmpl.Execute(&execdTmplOutput, tags); err != nil {
 		return fmt.Errorf("error executing template %s: %v", tagsTemplatePath, err)
 	}
-	if err := WriteIndexHTML(blogProps, destDirPath, "Tags", "Tags", template.HTML(buf.String()), t); err != nil {
+	if err := WriteIndexHTML(blogProps, destDirPath, "Tags", "Tags",
+			template.HTML(execdTmplOutput.String()), t); err != nil {
 		return err
 	}
 	return nil

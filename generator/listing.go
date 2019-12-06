@@ -48,7 +48,7 @@ func (g *ListingGenerator) Generate() error {
 	if err != nil {
 		return err
 	}
-	var postBlocks []string
+	var postBlox []string
 	for _, post := range posts {
 		meta := post.PropSet
 		link := fmt.Sprintf("/%s/", post.DirBase)
@@ -60,26 +60,27 @@ func (g *ListingGenerator) Generate() error {
 			Tags:       createTags(meta["tags"]),
 			TimeToRead: calculateTimeToRead(post.CntAsHTML),
 		}
-		block := bytes.Buffer{}
-		if err := short.Execute(&block, ld); err != nil {
+		execdPostTmplOutput := bytes.Buffer{}
+		if err := short.Execute(&execdPostTmplOutput, ld); err != nil {
 			return fmt.Errorf("error executing template %s: %v", shortTemplatePath, err)
 		}
-		postBlocks = append(postBlocks, block.String())
+		postBlox = append(postBlox, execdPostTmplOutput.String())
 	}
-	htmlBlocks := template.HTML(strings.Join(postBlocks, "<br />"))
+	htmlBloxFragment := template.HTML(strings.Join(postBlox, "<br />"))
 	if g.Config.IsIndex {
 		archiveLink, err := getTemplate(archiveLinkTemplatePath)
 		if err != nil {
 			return err
 		}
-		lastBlock := bytes.Buffer{}
-		if err := archiveLink.Execute(&lastBlock, nil); err != nil {
+		execdArchiveLinkTmplOutput := bytes.Buffer{}
+		if err := archiveLink.Execute(&execdArchiveLinkTmplOutput, nil); err != nil {
 			return fmt.Errorf("error executing template %s: %v", archiveLinkTemplatePath, err)
 		}
-		htmlBlocks = template.HTML(fmt.Sprintf("%s%s", htmlBlocks, template.HTML(lastBlock.String())))
+		htmlBloxFragment = template.HTML(fmt.Sprintf(
+			"%s%s", htmlBloxFragment, template.HTML(execdArchiveLinkTmplOutput.String())))
 	}
-	if err := // g.Config.IndexWriter.WriteIndexHTML(destination, pageTitle, pageTitle, htmlBlocks, t); err != nil {
-		WriteIndexHTML(g.Config.BlogProps, destDirPath, pageTitle, pageTitle, htmlBlocks, t); err != nil {
+	if err := WriteIndexHTML(g.Config.BlogProps, destDirPath, pageTitle,
+			pageTitle, htmlBloxFragment, t); err != nil {
 		return err
 	}
 	return nil
