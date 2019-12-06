@@ -56,8 +56,8 @@ func (g *TagsGenerator) Generate() error {
 
 func generateTagIndex(tagPostsMap map[string][]*Post, t *template.Template,
 		destDirPath string, blogProps SU.PropSet) error {
-	tagsTemplatePath := FP.Join("template", "tags.html")
-	tmpl, err := getTemplate(tagsTemplatePath)
+	tagsTmplPath := FP.Join("template", "tags.html")
+	tagsTmplRaw, err := getTemplate(tagsTmplPath)
 	if err != nil {
 		return err
 	}
@@ -67,8 +67,8 @@ func generateTagIndex(tagPostsMap map[string][]*Post, t *template.Template,
 	}
 	sort.Sort(ByCountDesc(tags))
 	execdTmplOutput := bytes.Buffer{}
-	if err := tmpl.Execute(&execdTmplOutput, tags); err != nil {
-		return fmt.Errorf("error executing template %s: %v", tagsTemplatePath, err)
+	if err := tagsTmplRaw.Execute(&execdTmplOutput, tags); err != nil {
+		return fmt.Errorf("error executing template %s: %v", tagsTmplPath, err)
 	}
 	if err := WriteIndexHTML(blogProps, destDirPath, "Tags", "Tags",
 			template.HTML(execdTmplOutput.String()), t); err != nil {

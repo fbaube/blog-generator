@@ -38,13 +38,13 @@ func (pLC *ListingConfig) String() string {
 
 // Generate starts the listing generation.
 func (g *ListingGenerator) Generate() error {
-	shortTemplatePath := FP.Join("template", "short.html")
-	archiveLinkTemplatePath := FP.Join("template", "archiveLink.html")
+	shortTmplPath := FP.Join("template", "short.html")
+	archiveLinkTmplPath := FP.Join("template", "archiveLink.html")
 	posts := g.Config.Posts
 	t := g.Config.Template
 	destDirPath := g.Config.Dest
 	pageTitle := g.Config.PageTitle
-	short, err := getTemplate(shortTemplatePath)
+	shortTmplRaw, err := getTemplate(shortTmplPath)
 	if err != nil {
 		return err
 	}
@@ -61,20 +61,20 @@ func (g *ListingGenerator) Generate() error {
 			TimeToRead: calculateTimeToRead(post.CntAsHTML),
 		}
 		execdPostTmplOutput := bytes.Buffer{}
-		if err := short.Execute(&execdPostTmplOutput, ld); err != nil {
-			return fmt.Errorf("error executing template %s: %v", shortTemplatePath, err)
+		if err := shortTmplRaw.Execute(&execdPostTmplOutput, ld); err != nil {
+			return fmt.Errorf("error executing template %s: %v", shortTmplPath, err)
 		}
 		postBlox = append(postBlox, execdPostTmplOutput.String())
 	}
 	htmlBloxFragment := template.HTML(strings.Join(postBlox, "<br />"))
 	if g.Config.IsIndex {
-		archiveLink, err := getTemplate(archiveLinkTemplatePath)
+		archiveLinkTmplRaw, err := getTemplate(archiveLinkTmplPath)
 		if err != nil {
 			return err
 		}
 		execdArchiveLinkTmplOutput := bytes.Buffer{}
-		if err := archiveLink.Execute(&execdArchiveLinkTmplOutput, nil); err != nil {
-			return fmt.Errorf("error executing template %s: %v", archiveLinkTemplatePath, err)
+		if err := archiveLinkTmplRaw.Execute(&execdArchiveLinkTmplOutput, nil); err != nil {
+			return fmt.Errorf("error executing template %s: %v", archiveLinkTmplPath, err)
 		}
 		htmlBloxFragment = template.HTML(fmt.Sprintf(
 			"%s%s", htmlBloxFragment, template.HTML(execdArchiveLinkTmplOutput.String())))

@@ -59,7 +59,7 @@ func New(config *SiteConfig) *SiteGenerator {
 
 // Generate starts the static blog generation.
 func (g *SiteGenerator) Generate() error {
-	masterPageTemplatePath := filepath.Join("template", "masterpagetemplate.html")
+	masterPageTmplPath := filepath.Join("template", "masterpagetemplate.html")
 	sources := g.StConfig.Sources
 	destination := g.StConfig.Dest
 	fmt.Printf("##>> SiteGenr: dest<%s>; sources: %+v \n", destination, sources)
@@ -73,7 +73,7 @@ func (g *SiteGenerator) Generate() error {
 	}
 
 	// Get the master page template
-	masterPageTemplate, err := getTemplate(masterPageTemplatePath)
+	masterPageTemplate, err := getTemplate(masterPageTmplPath)
 	if err != nil {
 		return err
 	}
