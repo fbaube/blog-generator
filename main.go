@@ -9,10 +9,8 @@ import (
 // main is a dead simple one-liner eh ?
 func main() {
 	/*
-	s := serrors.New("This is a stack trace error")
+	s := serrors.New("This is a stack trace error (only \"+v\" works)")
 	fmt.Printf("====\n%+v\n====\n",s)
-	callStack, _ := serrors.Trace(s, serrors.StandardFormat)
-  fmt.Println(callStack, "===")
 	*/
 	cli.Run()
 }
