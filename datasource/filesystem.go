@@ -21,10 +21,10 @@ func (ds *FileSystemDataSource) Fetch(from, to string) ([]string, error) {
 	fmt.Printf("Fetching data from %s into %s...\n", from, to)
 	var e error
 
-	if e = createFolderIfNotExist(to); e != nil {
+	if e = FU.MakeDirectoryExist(to); e != nil {
 		return nil, e
 	}
-	if e = clearFolder(to); e != nil {
+	if e = FU.ClearDirectory(to); e != nil {
 		return nil, e
 	}
 	// if err := cloneFileDir(to, from); err != nil {
