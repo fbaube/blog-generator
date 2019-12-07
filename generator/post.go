@@ -18,6 +18,7 @@ import (
 	"errors"
 	FU "github.com/fbaube/fileutils"
 	SU "github.com/fbaube/stringutils"
+	"github.com/morningconsult/serrors"
 )
 
 // Post holds data for a post.
@@ -65,7 +66,7 @@ func (g *PostGenerator) Generate() error {
 	fmt.Printf("\tGenerating Post: %s...\n", post.PropSet["title"])
 	staticDirPath := FP.Join(destination, post.DirBase)
 	if err := os.Mkdir(staticDirPath, os.ModePerm); err != nil {
-		return fmt.Errorf("error creating directory at %s: %w", staticDirPath, err)
+		return serrors.Errorf("error creating directory at %s: %w", staticDirPath, err)
 	}
 	if post.ImagesDir != "" {
 		if err := copyImagesDir(post.ImagesDir, staticDirPath); err != nil {
@@ -99,11 +100,11 @@ func newPost(dirpath, dateFormat string) (p *Post, e error) {
 func copyImagesDir(source, destination string) (err error) {
 	path := FP.Join(destination, "images")
 	if err := os.Mkdir(path, os.ModePerm); err != nil {
-		return fmt.Errorf("error creating images directory at %s: %v", path, err)
+		return serrors.Errorf("error creating images directory at %s: %w", path, err)
 	}
 	files, err := ioutil.ReadDir(source)
 	if err != nil {
-		return fmt.Errorf("error reading directory %s: %v", path, err)
+		return serrors.Errorf("error reading directory %s: %w", path, err)
 	}
 	for _, file := range files {
 		src := FP.Join(source, file.Name())
@@ -130,7 +131,7 @@ func getPost(path string) (p *Post, e error) {
 	}
 	p.File = p.File.LoadFile()
 	if e = p.File.GetError(); e != nil {
-		return nil, fmt.Errorf("Can't load file <%s>: %w", postFP, e)
+		return nil, serrors.Errorf("Can't load file <%s>: %w", postFP, e)
 	}
 	// println("RAW:", p.File.Raw)
 	// Try to evaluate YAML metadata header
@@ -148,7 +149,7 @@ func getPost(path string) (p *Post, e error) {
 	}
 	p.CntAsHTML, e = replaceCodeParts([]byte(bb.String()))
 	if e != nil {
-		return nil, fmt.Errorf("error during syntax hiliting of %s: %w", postFP, e)
+		return nil, serrors.Errorf("error during syntax hiliting of %s: %w", postFP, e)
 	}
 	return p, nil
 }
@@ -160,7 +161,7 @@ func getImages(path string) (string, []string, error) {
 		if os.IsNotExist(err) {
 			return "", nil, nil
 		}
-		return "", nil, fmt.Errorf("error while reading folder %s: %v", dirPath, err)
+		return "", nil, serrors.Errorf("error while reading folder %s: %w", dirPath, err)
 	}
 	images := []string{}
 	for _, file := range files {
@@ -173,7 +174,7 @@ func replaceCodeParts(htmlFile []byte) (string, error) {
 	byteReader := bytes.NewReader(htmlFile)
 	doc, err := goquery.NewDocumentFromReader(byteReader)
 	if err != nil {
-		return "", fmt.Errorf("error while parsing html: %v", err)
+		return "", serrors.Errorf("error while parsing html: %w", err)
 	}
 	// find code-parts via css selector and replace them with highlighted versions
 	doc.Find("code[class*=\"language-\"]").Each(func(i int, s *goquery.Selection) {
@@ -197,7 +198,7 @@ func replaceCodeParts(htmlFile []byte) (string, error) {
 	})
 	new, err := doc.Html()
 	if err != nil {
-		return "", fmt.Errorf("error while generating html: %v", err)
+		return "", serrors.Errorf("error while generating html: %w", err)
 	}
 	// replace unnecessarily added html tags
 	new = strings.Replace(new, "<html><head></head><body>", "", 1)

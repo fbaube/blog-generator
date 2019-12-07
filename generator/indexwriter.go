@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"time"
 	SU "github.com/fbaube/stringutils"
+	"github.com/morningconsult/serrors"
 )
 
 // WriteIndexHTML writes an index.html file.
@@ -19,7 +20,7 @@ func WriteIndexHTML(blogProps SU.PropSet, destDirPath, pageTitle,
 	filePath := filepath.Join(destDirPath, "index.html")
 	f, err := os.Create(filePath)
 	if err != nil {
-		return fmt.Errorf("error creating file %s: %v", filePath, err)
+		return serrors.Errorf("error creating file %s: %w", filePath, err)
 	}
 	defer f.Close()
 	metaDesc := aMetaDesc
@@ -50,10 +51,10 @@ func WriteIndexHTML(blogProps SU.PropSet, destDirPath, pageTitle,
 		HighlightCSS:    template.CSS(hlbuf.String()),
 	}
 	if err := t.Execute(w, td); err != nil {
-		return fmt.Errorf("error executing template %s: %v", filePath, err)
+		return serrors.Errorf("error executing template %s: %w", filePath, err)
 	}
 	if err := w.Flush(); err != nil {
-		return fmt.Errorf("error writing file %s: %v", filePath, err)
+		return serrors.Errorf("error writing file %s: %w", filePath, err)
 	}
 	return nil
 }

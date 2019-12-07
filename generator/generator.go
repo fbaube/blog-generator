@@ -10,6 +10,7 @@ import (
 	S "strings"
 	"strconv"
 	"sync"
+	"github.com/morningconsult/serrors"
 )
 
 // Meta is a data container for per-post Metadata in a "meta.yaml".
@@ -266,7 +267,7 @@ func createTagPostsMap(posts []*Post) map[string][]*Post {
 func getTemplate(path string) (*template.Template, error) {
 	t, err := template.ParseFiles(path)
 	if err != nil {
-		return nil, fmt.Errorf("error reading template %s: %v", path, err)
+		return nil, serrors.Errorf("error reading template %s: %w", path, err)
 	}
 	return t, nil
 }

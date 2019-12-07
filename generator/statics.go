@@ -8,6 +8,7 @@ import (
 	FP "path/filepath"
 	"strings"
   FU "github.com/fbaube/fileutils"
+	"github.com/morningconsult/serrors"
 )
 
 // StaticsGenerator object
@@ -39,7 +40,7 @@ func (g *StaticsGenerator) Generate() error {
 		}
 		content, err := ioutil.ReadFile(k)
 		if err != nil {
-			return fmt.Errorf("error reading file %s: %v", k, err)
+			return serrors.Errorf("error reading file %s: %w", k, err)
 		}
 		println("Calling WriteIndexHTML:", k, v)
 		if err := WriteIndexHTML(g.Config.BlogProps, FP.Dir(v), getTitle(k), getTitle(k), template.HTML(content), t); err != nil {
@@ -54,10 +55,10 @@ func createFolderIfNotExist(path string) error {
 	if _, err := os.Stat(path); err != nil {
 		if os.IsNotExist(err) {
 			if err = os.Mkdir(path, os.ModePerm); err != nil {
-				return fmt.Errorf("error creating directory %s: %v", path, err)
+				return serrors.Errorf("error creating directory %s: %w", path, err)
 			}
 		} else {
-			return fmt.Errorf("error accessing directory %s: %v", path, err)
+			return serrors.Errorf("error accessing directory %s: %w", path, err)
 		}
 	}
 	return nil

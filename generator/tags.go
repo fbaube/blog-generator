@@ -9,6 +9,7 @@ import (
 	S "strings"
 	FU "github.com/fbaube/fileutils"
 	SU "github.com/fbaube/stringutils"
+	"github.com/morningconsult/serrors"
 )
 
 // Tag holds the data for a Tag.
@@ -68,7 +69,7 @@ func generateTagIndex(tagPostsMap map[string][]*Post, t *template.Template,
 	sort.Sort(ByCountDesc(tags))
 	execdTmplOutput := bytes.Buffer{}
 	if err := tagsTmplRaw.Execute(&execdTmplOutput, tags); err != nil {
-		return fmt.Errorf("error executing template %s: %v", tagsTmplPath, err)
+		return serrors.Errorf("error executing template %s: %w", tagsTmplPath, err)
 	}
 	if err := WriteIndexHTML(blogProps, destDirPath, "Tags", "Tags",
 			template.HTML(execdTmplOutput.String()), t); err != nil {

@@ -10,6 +10,7 @@ import (
 	SU "github.com/fbaube/stringutils"
 	"github.com/fbaube/bloggenator/datasource"
 	"github.com/fbaube/bloggenator/generator"
+	"github.com/morningconsult/serrors"
 )
 
 // Run runs the application. Amaze!
@@ -42,12 +43,12 @@ func Run() {
 	tmpTo = cfgs[0]["tmp"]
 	chp_tmpTo = FU.NewCheckedPath(tmpTo)
 	if chp_tmpTo.Exists && !chp_tmpTo.IsDir {
-		log.Fatal(fmt.Errorf("\"Tmp\" is not a directory: <%s>", tmpTo))
+		log.Fatal(serrors.Errorf("\"Tmp\" is not a directory: <%s>", tmpTo))
 	}
 	if dstype == "filesystem" {
 		chp_repo = FU.NewCheckedPath(repo)
 		if !(chp_repo.Exists && chp_repo.IsDir) {
-			log.Fatal(fmt.Errorf("HTTP Repo is not a directory: <%s>", repo))
+			log.Fatal(serrors.Errorf("HTTP Repo is not a directory: <%s>", repo))
 		}
 	}
 	ds := datasource.New(dstype)
@@ -80,12 +81,12 @@ func Run() {
 func readConfig() (ps []SU.PropSet, e error) {
 	data, e := ioutil.ReadFile("bloggen.yml")
 	if e != nil {
-		return nil, fmt.Errorf(
+		return nil, serrors.Errorf(
 			"Can't read config file <%s>: %w", "bloggen.yml", e)
 	}
 	cfgMap, _, e := SU.GetYamlMetadata(string(data))
 	if e != nil || cfgMap == nil {
-		return nil, fmt.Errorf("Can't parse config: %w", e)
+		return nil, serrors.Errorf("Can't parse config: %w", e)
 	}
 	fmt.Printf("YAML-CFG-MAP: %+v \n", cfgMap)
 	ps = make([]SU.PropSet, 3)
@@ -98,7 +99,7 @@ func readConfig() (ps []SU.PropSet, e error) {
 	ps[1] = SU.YamlMapAsPropSet(cfgMap["blog"].(map[interface{}]interface{}))
 	ps[2] = SU.YamlMapAsPropSet(cfgMap["statics"].(map[interface{}]interface{}))
 	if ps[0]["repo"] == "" {
-		return nil, fmt.Errorf("Provide a repo URL: filepath:// or http[s]://")
+		return nil, serrors.Errorf("Provide a repo URL: filepath:// or http[s]://")
 	}
 	if ps[0]["tmp"] == "" {
 		println("Setting default: tmp")
@@ -110,24 +111,24 @@ func readConfig() (ps []SU.PropSet, e error) {
 	}
 	iw := ps[1] // generator.NewIndexWriter(ps)
 	if iw["url"] == "" {
-		return nil, fmt.Errorf("Please provide a Blog URL, e.g.: https://www.zupzup.org")
+		return nil, serrors.Errorf("Please provide a Blog URL, e.g.: https://www.infojunkie.eu")
 	}
 	if iw["language"] == "" {
 		println("Setting default lg: en-us")
 		ps[1]["language"] = "en-us"
 	}
 	if iw["description"] == "" {
-		return nil, fmt.Errorf("Provide a Blog Description, e.g.: A blog about blogging")
+		return nil, serrors.Errorf("Provide a Blog Description, e.g.: A blog about blogging")
 	}
 	if iw["dateformat"] == "" {
 		println("Setting default date format: 02.01.2006")
 		ps[1]["dateformat"] = "02.01.2006"
 	}
 	if iw["title"] == "" {
-		return nil, fmt.Errorf("Provide a Blog Title, e.g.: wuzzup")
+		return nil, serrors.Errorf("Provide a Blog Title, e.g.: wuzzup")
 	}
 	if iw["author"] == "" {
-		return nil, fmt.Errorf("Provide a Blog author, e.g.: Joe Blow")
+		return nil, serrors.Errorf("Provide a Blog author, e.g.: Joe Schmoe")
 	}
 	if ps[1]["frontpageposts"] == "0" {
 		println("Setting default post count: 10")

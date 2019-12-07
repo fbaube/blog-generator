@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"time"
 	SU "github.com/fbaube/stringutils"
+	"github.com/morningconsult/serrors"
 )
 
 // RSSGenerator object
@@ -56,11 +57,11 @@ func (g *RSSGenerator) Generate() error {
 	filePath := filepath.Join(destination, "index.xml")
 	f, err := os.Create(filePath)
 	if err != nil {
-		return fmt.Errorf("error creating file %s: %v", filePath, err)
+		return serrors.Errorf("error creating file %s: %w", filePath, err)
 	}
 	f.Close()
 	if err := doc.WriteToFile(filePath); err != nil {
-		return fmt.Errorf("error writing to file %s: %v", filePath, err)
+		return serrors.Errorf("error writing to file %s: %w", filePath, err)
 	}
 	fmt.Println("\tFinished generating RSS...")
 	return nil

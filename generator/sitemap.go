@@ -5,6 +5,7 @@ import (
 	"github.com/beevik/etree"
 	"os"
 	"path/filepath"
+	"github.com/morningconsult/serrors"
 )
 
 // SitemapGenerator object
@@ -53,11 +54,11 @@ func (g *SitemapGenerator) Generate() error {
 	filePath := filepath.Join(destination, "sitemap.xml")
 	f, err := os.Create(filePath)
 	if err != nil {
-		return fmt.Errorf("error creating file %s: %v", filePath, err)
+		return serrors.Errorf("error creating file %s: %w", filePath, err)
 	}
 	f.Close()
 	if err := doc.WriteToFile(filePath); err != nil {
-		return fmt.Errorf("error writing to file %s: %v", filePath, err)
+		return serrors.Errorf("error writing to file %s: %w", filePath, err)
 	}
 	fmt.Println("\tFinished generating Sitemap...")
 	return nil

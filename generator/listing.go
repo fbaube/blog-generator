@@ -6,6 +6,7 @@ import (
 	"html/template"
 	FP "path/filepath"
 	"strings"
+	"github.com/morningconsult/serrors"
 )
 
 // ListingData holds the data for the listing page.
@@ -62,7 +63,7 @@ func (g *ListingGenerator) Generate() error {
 		}
 		execdPostTmplOutput := bytes.Buffer{}
 		if err := shortTmplRaw.Execute(&execdPostTmplOutput, ld); err != nil {
-			return fmt.Errorf("error executing template %s: %v", shortTmplPath, err)
+			return serrors.Errorf("error executing template %s: %w", shortTmplPath, err)
 		}
 		postBlox = append(postBlox, execdPostTmplOutput.String())
 	}
@@ -74,7 +75,7 @@ func (g *ListingGenerator) Generate() error {
 		}
 		execdArchiveLinkTmplOutput := bytes.Buffer{}
 		if err := archiveLinkTmplRaw.Execute(&execdArchiveLinkTmplOutput, nil); err != nil {
-			return fmt.Errorf("error executing template %s: %v", archiveLinkTmplPath, err)
+			return serrors.Errorf("error executing template %s: %w", archiveLinkTmplPath, err)
 		}
 		htmlBloxFragment = template.HTML(fmt.Sprintf(
 			"%s%s", htmlBloxFragment, template.HTML(execdArchiveLinkTmplOutput.String())))
