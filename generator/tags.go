@@ -71,8 +71,13 @@ func generateTagIndex(tagPostsMap map[string][]*Post, t *template.Template,
 	if err := tagsTmplRaw.Execute(&execdTmplOutput, tags); err != nil {
 		return serrors.Errorf("error executing template %s: %w", tagsTmplPath, err)
 	}
-	if err := WriteIndexHTML(blogProps, destDirPath, "Tags", "Tags",
-			template.HTML(execdTmplOutput.String()), t); err != nil {
+	// WriteIndexHTML(blogProps SU.PropSet, destDirPath, pageTitle,
+	// aMetaDesc string, htmlContentFrag template.HTML, t *template.Template)
+	targs := *new(IndexHtmlMasterPageTemplateVariableArguments)
+	targs.PageTitle = "Tags"
+	targs.HtmlTitle = "Tags"
+	targs.HtmlContentFrag = template.HTML(execdTmplOutput.String())
+	if err := WriteIndexHTML(targs, blogProps, destDirPath, t); err != nil {
 		return err
 	}
 	return nil

@@ -42,9 +42,13 @@ func (g *ListingGenerator) Generate() error {
 	shortTmplPath := FP.Join("template", "short.html")
 	archiveLinkTmplPath := FP.Join("template", "archiveLink.html")
 	posts := g.Config.Posts
+	// For the ALL POSTS listing AND for the ARCHIVES
+	// listing, this template is the MasterPageTemplate.
 	t := g.Config.Template
 	destDirPath := g.Config.Dest
-	pageTitle := g.Config.PageTitle
+	targs := *new(IndexHtmlMasterPageTemplateVariableArguments)
+	targs.PageTitle = g.Config.PageTitle
+	targs.HtmlTitle = g.Config.PageTitle
 	shortTmplRaw, err := getTemplate(shortTmplPath)
 	if err != nil {
 		return err
@@ -80,8 +84,10 @@ func (g *ListingGenerator) Generate() error {
 		htmlBloxFragment = template.HTML(fmt.Sprintf(
 			"%s%s", htmlBloxFragment, template.HTML(execdArchiveLinkTmplOutput.String())))
 	}
-	if err := WriteIndexHTML(g.Config.BlogProps, destDirPath, pageTitle,
-			pageTitle, htmlBloxFragment, t); err != nil {
+	targs.HtmlContentFrag = htmlBloxFragment
+	// WriteIndexHTML(blogProps SU.PropSet, destDirPath, pageTitle,
+	// aMetaDesc string, htmlContentFrag template.HTML, t *template.Template)
+	if err := WriteIndexHTML(targs, g.Config.BlogProps, destDirPath, t); err != nil {
 		return err
 	}
 	return nil

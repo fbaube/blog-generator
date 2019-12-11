@@ -22,7 +22,6 @@ type Meta struct {
 	Tags       []string
 	ParsedDate time.Time
 }
-*/
 
 // IndexData is a data container for the landing page.
 type IndexData struct {
@@ -35,6 +34,7 @@ type IndexData struct {
 	MetaDescription string
 	HighlightCSS    template.CSS
 }
+*/
 
 // Generator interface
 type Generator interface {
@@ -279,7 +279,9 @@ func getNumOfPagesOnFrontpage(posts []*Post, numPosts int) int {
 	return numPosts
 }
 
-func buildCanonicalLink(path, baseURL string) string {
+// buildCanonicalLink builds a URL by taking the baseURL and appending
+// the path, where the first two segments of the path are dropped.
+func buildCanonicalLink(baseURL, path string) string {
 	parts := S.Split(path, "/")
 	if len(parts) > 2 {
 		return fmt.Sprintf("%s/%s/index.html", baseURL, S.Join(parts[2:], "/"))

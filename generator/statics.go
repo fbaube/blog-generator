@@ -43,7 +43,13 @@ func (g *StaticsGenerator) Generate() error {
 			return serrors.Errorf("error reading file %s: %w", k, err)
 		}
 		println("Calling WriteIndexHTML:", k, v)
-		if err := WriteIndexHTML(g.Config.BlogProps, FP.Dir(v), getTitle(k), getTitle(k), template.HTML(content), t); err != nil {
+		// WriteIndexHTML(blogProps SU.PropSet, destDirPath, pageTitle,
+		// aMetaDesc string, htmlContentFrag template.HTML, t *template.Template)
+		targs := *new(IndexHtmlMasterPageTemplateVariableArguments)
+		targs.PageTitle = getTitle(k)
+		targs.HtmlTitle = getTitle(k)
+		targs.HtmlContentFrag = template.HTML(content)
+		if err := WriteIndexHTML(targs, g.Config.BlogProps, FP.Dir(v), t); err != nil {
 			return err
 		}
 	}

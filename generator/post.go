@@ -73,8 +73,14 @@ func (g *PostGenerator) Generate() error {
 			return err
 		}
 	}
-	if err := WriteIndexHTML(g.Config.BlogProps, staticDirPath, post.PropSet["title"],
-			post.PropSet["short"], template.HTML(post.CntAsHTML), t); err != nil {
+	// func WriteIndexHTML(blogProps SU.PropSet, destDirPath, pageTitle,
+	// aMetaDesc string, htmlContentFrag template.HTML, t *template.Template)
+	targs := *new(IndexHtmlMasterPageTemplateVariableArguments)
+	targs.PageTitle = post.PropSet["title"]
+	targs.HtmlTitle = post.PropSet["title"]
+	targs.MetaDesc = post.PropSet["short"]
+	targs.HtmlContentFrag = template.HTML(post.CntAsHTML)
+	if err := WriteIndexHTML(targs, g.Config.BlogProps, staticDirPath, t); err != nil {
 		return err
 	}
 	fmt.Printf("\tFinished generating Post: %s...\n", post.PropSet["title"])

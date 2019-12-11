@@ -15,17 +15,18 @@ import (
 )
 
 // WriteIndexHTML writes an index.html file.
-func WriteIndexHTML(blogProps SU.PropSet, destDirPath, pageTitle,
-		aMetaDesc string, htmlContentFrag template.HTML, t *template.Template) error {
+func WriteIndexHTML(targs IndexHtmlMasterPageTemplateVariableArguments,
+	blogProps SU.PropSet, destDirPath string, t *template.Template) error {
+	fmt.Printf("##>> WrtIdxHtml: dest<%s> title<%s> desc<%s> tmpl?<%t> cont||%s||\n",
+		destDirPath, targs.PageTitle, targs.MetaDesc, (t!=nil), targs.HtmlContentFrag)
 	filePath := filepath.Join(destDirPath, "index.html")
 	f, err := os.Create(filePath)
 	if err != nil {
 		return serrors.Errorf("error creating file %s: %w", filePath, err)
 	}
 	defer f.Close()
-	metaDesc := aMetaDesc
-	if aMetaDesc == "" {
-		metaDesc = blogProps["description"]
+	if targs.MetaDesc == "" {
+		targs.MetaDesc = blogProps["description"]
 	}
 	hlbuf := bytes.Buffer{}
 	hlw := bufio.NewWriter(&hlbuf)
@@ -36,20 +37,17 @@ func WriteIndexHTML(blogProps SU.PropSet, destDirPath, pageTitle,
 
 	// var blogTitle, htmlTitle string
 	blogTitle := blogProps["title"]
-	htmlTitle := blogTitle
-	if pageTitle != "" {
-		htmlTitle = fmt.Sprintf("%s - %s", pageTitle, blogTitle)
+	targs.HtmlTitle = blogTitle
+	if targs.PageTitle != "" {
+		targs.HtmlTitle = fmt.Sprintf("%s - %s", targs.PageTitle, blogTitle)
 	}
-	td := IndexData{
-		Name:            blogProps["author"],
-		Year:            time.Now().Year(),
-		HTMLTitle:       htmlTitle,
-		PageTitle:       pageTitle,
-		HtmlCntFrag:     htmlContentFrag,
-		CanonicalLink:   buildCanonicalLink(destDirPath, blogProps["url"]),
-		MetaDescription: metaDesc,
-		HighlightCSS:    template.CSS(hlbuf.String()),
-	}
+	td := new(IndexHtmlMasterPageTemplateVariables) // IndexData{
+	td.IndexHtmlMasterPageTemplateVariableArguments = targs
+	td.Name = blogProps["author"]
+	td.Year = time.Now().Year()
+	td.CanonLink = buildCanonicalLink(blogProps["url"], destDirPath)
+	td.HiliteCSS = template.CSS(hlbuf.String())
+
 	if err := t.Execute(w, td); err != nil {
 		return serrors.Errorf("error executing template %s: %w", filePath, err)
 	}
