@@ -4,6 +4,8 @@ import(
   	"html/template"
 )
 
+// IndexHtmlMasterPageTemplateVariableArguments
+// is variables passed to func WriteIndexHTML(..)
 type IndexHtmlMasterPageTemplateVariableArguments struct {
   HtmlTitle   string
   PageTitle   string
@@ -20,14 +22,3 @@ type IndexHtmlMasterPageTemplateVariables struct {
 	Name      string
 	Year      int
 }
-
-/*
-// IndexData is a data container for the landing page.
-type IndexData struct {
-  IndexHtmlMasterPageTemplateVariableArguments
-	Year            int
-	Name            string
-	CanonicalLink   string
-	HighlightCSS    template.CSS
-}
-*/

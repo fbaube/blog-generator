@@ -13,29 +13,6 @@ import (
 	"github.com/morningconsult/serrors"
 )
 
-// Meta is a data container for per-post Metadata in a "meta.yaml".
-/*
-type Meta struct {
-	Title      string
-	Short      string
-	Date       string
-	Tags       []string
-	ParsedDate time.Time
-}
-
-// IndexData is a data container for the landing page.
-type IndexData struct {
-	HTMLTitle       string
-	PageTitle       string
-	HtmlCntFrag     template.HTML
-	Year            int
-	Name            string
-	CanonicalLink   string
-	MetaDescription string
-	HighlightCSS    template.CSS
-}
-*/
-
 // Generator interface
 type Generator interface {
 	Generate() error
