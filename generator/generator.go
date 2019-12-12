@@ -13,6 +13,10 @@ import (
 	"github.com/morningconsult/serrors"
 )
 
+// DO_SEQUENTIALLY simplifies debugging by forcing all Generators
+// to run sequentially - not concurrently - in func runTasks()
+var DO_SEQUENTIALLY = true
+
 // Generator interface
 type Generator interface {
 	Generate() error
@@ -77,10 +81,6 @@ func (g *SiteGenerator) Generate() error {
 func runTasks(posts []*Post, masterPageTemplate *template.Template, destination string,
 		cfgs []SU.PropSet) error {
 
-	var wg sync.WaitGroup
-	done := make(chan bool, 1)
-	errs := make(chan error, 1)
-	pool := make(chan struct{}, 50)
 	generators := []Generator{}
 	blogProps := cfgs[1]
 	// ==========================
@@ -135,13 +135,13 @@ func runTasks(posts []*Post, masterPageTemplate *template.Template, destination 
 		fmt.Sprintf("; \n\t TagPostsMap: %+v", pTC.TagPostsMap))
 	tg := TagsGenerator{pTC}
 	staticURLs := []string{}
-	var file, tmpl string
-	var files, tmpls []string
-	file = cfgs[2]["files"]
+	var /* file, */ tmpl string
+	var /* files, */ tmpls []string
+	// file = cfgs[2]["files"]
 	tmpl = cfgs[2]["templates"]
-	files = S.Split(file, " ")
+	// files = S.Split(file, " ")
 	tmpls = S.Split(tmpl, " ")
-	fmt.Printf("FILES: %v \n", files)
+	// fmt.Printf("FILES: %v \n", files)
 	fmt.Printf("TMPLS: %v \n", tmpls)
 	for _, staticURL := range tmpls {
 		staticURLs = append(staticURLs, staticURL) // .Dest)
@@ -173,10 +173,12 @@ func runTasks(posts []*Post, masterPageTemplate *template.Template, destination 
 	// ==========================
 	//   FILES ????
 	// ==========================
+	/*
 	psFilesToDests := SU.PropSet{} // map[string]string{}
 	for _, static := range files {
 		psFilesToDests["static/" + static] = filepath.Join(destination, static) // .Dest)
 	}
+	*/
 	// ==========================
 	//   TEMPLATES
 	// ==========================
@@ -196,6 +198,21 @@ func runTasks(posts []*Post, masterPageTemplate *template.Template, destination 
 		pSC.BaseConfig.String(), pSC.TmplsToFiles) // pSC.FilesToDests,
 	statg := StaticsGenerator{pSC}
 	generators = append(generators, &fg, &ag, &tg, &sg, &rg, &statg)
+
+	if DO_SEQUENTIALLY {
+		for _, g := range generators {
+			if err := g.Generate(); err != nil {
+				println("ERROR:", err.Error())
+				return err
+			}
+		}
+		return nil
+	}
+
+	var wg sync.WaitGroup
+	done := make(chan bool, 1)
+	errs := make(chan error, 1)
+	pool := make(chan struct{}, 50)
 
 	for _, generator := range generators {
 		wg.Add(1)
@@ -261,7 +278,10 @@ func getNumOfPagesOnFrontpage(posts []*Post, numPosts int) int {
 func buildCanonicalLink(baseURL, path string) string {
 	parts := S.Split(path, "/")
 	if len(parts) > 2 {
-		return fmt.Sprintf("%s/%s/index.html", baseURL, S.Join(parts[2:], "/"))
+		retstr := fmt.Sprintf("%s/%s/index.html", baseURL, S.Join(parts[2:], "/"))
+		fmt.Printf("##>> bldCanon: baseURL<%s> path <%s> => Canon<%s> \n",
+			baseURL, path, retstr)
+		return retstr
 	}
 	return "/"
 }
