@@ -13,6 +13,6 @@ type BaseConfig struct {
 }
 
 func (bc *BaseConfig) String() string {
-  return fmt.Sprintf("BasCgf:HasTmpl?<%t>Dest<%s>Props<%v>",
+  return fmt.Sprintf("BasCfg:HasTmpl?<%t>Dest<%s>Props<%v>",
     (nil != bc.Template), bc.Dest, bc.BlogProps)
 }

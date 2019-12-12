@@ -33,7 +33,7 @@ func (g *StaticsGenerator) Generate() error {
   if err := FU.CopyDirRecursivelyFromTo("static", g.Config.Dest); err != nil {
 		return err
 	}
-
+	fmt.Printf("Nr of TmplsToFiles: %d \n", len(psTmplsToFiles))
 	for k, v := range psTmplsToFiles {
 		if err := createFolderIfNotExist(FP.Dir(v)); err != nil {
 			return err

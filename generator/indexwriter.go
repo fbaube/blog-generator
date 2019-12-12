@@ -17,8 +17,9 @@ import (
 // WriteIndexHTML writes an index.html file.
 func WriteIndexHTML(targs IndexHtmlMasterPageTemplateVariableArguments,
 	blogProps SU.PropSet, destDirPath string, t *template.Template) error {
+		trunc := SU.TruncateTo(string(targs.HtmlContentFrag), 200)
 	fmt.Printf("##>> WrtIdxHtml: dest<%s> title<%s> desc<%s> tmpl?<%t> cont||%s||\n",
-		destDirPath, targs.PageTitle, targs.MetaDesc, (t!=nil), targs.HtmlContentFrag)
+		destDirPath, targs.PageTitle, targs.MetaDesc, (t!=nil), template.HTML(trunc)) 
 	filePath := filepath.Join(destDirPath, "index.html")
 	f, err := os.Create(filePath)
 	if err != nil {

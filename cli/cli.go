@@ -88,7 +88,7 @@ func readConfig() (ps []SU.PropSet, e error) {
 	if e != nil || cfgMap == nil {
 		return nil, serrors.Errorf("Can't parse config: %w", e)
 	}
-	fmt.Printf("YAML-CFG-MAP: %+v \n", cfgMap)
+	// fmt.Printf("YAML-CFG-MAP: %+v \n", cfgMap)
 	ps = make([]SU.PropSet, 3)
 	if cfgMap["folders"] == nil ||
 	   cfgMap["blog"]    == nil ||

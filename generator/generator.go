@@ -44,7 +44,8 @@ func (g *SiteGenerator) Generate() error {
 	masterPageTmplPath := filepath.Join("template", "masterpagetemplate.html")
 	sources := g.StConfig.Sources
 	destination := g.StConfig.Dest
-	fmt.Printf("##>> SiteGenr: dest<%s>; sources: %+v \n", destination, sources)
+	fmt.Printf("SiteGenr: dest<%s> \n", destination)
+	// fmt.Printf("          sources: %+v \n", sources)
 
 	// Clear the WWW output directory and its "archive" subdirectory
 	if err := FU.ClearAndCreateDirectory(destination); err != nil {
@@ -78,8 +79,8 @@ func (g *SiteGenerator) Generate() error {
 	return nil
 }
 
-func runTasks(posts []*Post, masterPageTemplate *template.Template, destination string,
-		cfgs []SU.PropSet) error {
+func runTasks(posts []*Post, masterPageTemplate *template.Template,
+		destination string, cfgs []SU.PropSet) error {
 
 	generators := []Generator{}
 	blogProps := cfgs[1]
@@ -160,42 +161,32 @@ func runTasks(posts []*Post, masterPageTemplate *template.Template, destination 
 	//   RSS
 	// ==========================
 	pRC := new(RSSConfig)
-	pRC.BlogProps = cfgs[1] // *NewIndexWriter(cfgs)
+	pRC.BlogProps = cfgs[1]
 	pRC.Posts      = posts
 	pRC.Dest       = destination
-	// pRC.DateFormat = cfgs[1]["dateformat"]
-	// pRC.Language   = cfgs[1]["language"]
 	rg := RSSGenerator{pRC}
 	// ==========================
 	//   STATICS
 	// ==========================
 	pSC := new(StaticsConfig)
 	// ==========================
-	//   FILES ????
-	// ==========================
-	/*
-	psFilesToDests := SU.PropSet{} // map[string]string{}
-	for _, static := range files {
-		psFilesToDests["static/" + static] = filepath.Join(destination, static) // .Dest)
-	}
-	*/
-	// ==========================
 	//   TEMPLATES
 	// ==========================
 	psTmplsToFiles := SU.PropSet{} // map[string]string{}
-	for _, static := range tmpls {
-		psTmplsToFiles["static/" + static] = filepath.Join(destination, static, "index.html")
+	for _, staticFrom := range tmpls {
+		staticTo := S.TrimSuffix(staticFrom, ".html")
+		staticTo = S.TrimSuffix(staticTo, ".htm")
+		psTmplsToFiles["static/" + staticFrom] = filepath.Join(destination, staticTo, "index.html")
 	}
 	// ==========================
 	//   TEMPLATES
 	// ==========================
-	// pSC.FilesToDests = psFilesToDests
 	pSC.TmplsToFiles = psTmplsToFiles
 	pSC.Dest = cfgs[0]["dest"]
 	pSC.Template = masterPageTemplate
 	pSC.BlogProps = blogProps
 	fmt.Printf("StcsCfg: %s; \n\t %+v \n",
-		pSC.BaseConfig.String(), pSC.TmplsToFiles) // pSC.FilesToDests,
+		pSC.BaseConfig.String(), pSC.TmplsToFiles) 
 	statg := StaticsGenerator{pSC}
 	generators = append(generators, &fg, &ag, &tg, &sg, &rg, &statg)
 
@@ -246,7 +237,7 @@ func createTagPostsMap(posts []*Post) map[string][]*Post {
 	result := make(map[string][]*Post)
 	for _, post := range posts {
 		tags := S.Split(post.PropSet["tags"], " ")
-		for _, tag := range tags { // post.Meta.Tags {
+		for _, tag := range tags {
 			key := S.ToLower(tag)
 			if result[key] == nil {
 				result[key] = []*Post{post}
