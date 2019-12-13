@@ -136,13 +136,8 @@ func runTasks(posts []*Post, masterPageTemplate *template.Template,
 		fmt.Sprintf("; \n\t TagPostsMap: %+v", pTC.TagPostsMap))
 	tg := TagsGenerator{pTC}
 	staticURLs := []string{}
-	var /* file, */ tmpl string
-	var /* files, */ tmpls []string
-	// file = cfgs[2]["files"]
-	tmpl = cfgs[2]["templates"]
-	// files = S.Split(file, " ")
-	tmpls = S.Split(tmpl, " ")
-	// fmt.Printf("FILES: %v \n", files)
+	var tmpl = cfgs[2]["templates"]
+	var tmpls = S.Split(tmpl, " ")
 	fmt.Printf("TMPLS: %v \n", tmpls)
 	for _, staticURL := range tmpls {
 		staticURLs = append(staticURLs, staticURL) // .Dest)
@@ -186,7 +181,7 @@ func runTasks(posts []*Post, masterPageTemplate *template.Template,
 	pSC.Template = masterPageTemplate
 	pSC.BlogProps = blogProps
 	fmt.Printf("StcsCfg: %s; \n\t %+v \n",
-		pSC.BaseConfig.String(), pSC.TmplsToFiles) 
+		pSC.BaseConfig.String(), pSC.TmplsToFiles)
 	statg := StaticsGenerator{pSC}
 	generators = append(generators, &fg, &ag, &tg, &sg, &rg, &statg)
 

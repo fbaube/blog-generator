@@ -88,7 +88,7 @@ func (g *PostGenerator) Generate() error {
 }
 
 func newPost(dirpath, dateFormat string) (p *Post, e error) {
-	println("newPost dir:", dirpath)
+	// println("newPost dir:", dirpath)
 	p, e = getPost(dirpath)
 	if e != nil {
 		return nil, e

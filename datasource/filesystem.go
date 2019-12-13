@@ -18,7 +18,7 @@ func (ds *FileSystemDataSource) Fetch(from, to string) ([]string, error) {
 	if !path.IsAbs(from) {
 		panic("not absolute filepath: " + from)
 	}
-	fmt.Printf("Fetching data from %s into %s...\n", from, to)
+	fmt.Printf("Fetching data from %s \n              into %s...\n", from, to)
 	var e error
 
 	if e = FU.MakeDirectoryExist(to); e != nil {
@@ -36,6 +36,6 @@ func (ds *FileSystemDataSource) Fetch(from, to string) ([]string, error) {
 	if e != nil {
 		return nil, e
 	}
-	fmt.Print("Fetching complete.\n")
+	// fmt.Print("Fetching complete.\n")
 	return dirs, nil
 }
