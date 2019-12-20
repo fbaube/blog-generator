@@ -33,6 +33,9 @@ func (g *StaticsGenerator) Generate() error {
   if err := FU.CopyDirRecursivelyFromTo("static", g.Config.Dest); err != nil {
 		return err
 	}
+	// TODO Treewalk to find ".f." files
+	_ = walkFindFs()
+
 	fmt.Printf("Nr of TmplsToFiles: %d \n", len(psTmplsToFiles))
 	for k, v := range psTmplsToFiles {
 		if err := createFolderIfNotExist(FP.Dir(v)); err != nil {
