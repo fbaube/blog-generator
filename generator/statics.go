@@ -34,7 +34,7 @@ func (g *StaticsGenerator) Generate() error {
 		return err
 	}
 	// TODO Treewalk to find ".f." files
-	_ = walkFindFs()
+	_ = walkFindFs(g.Config.Dest, g.Config.Template, g.Config.BlogProps)
 
 	fmt.Printf("Nr of TmplsToFiles: %d \n", len(psTmplsToFiles))
 	for k, v := range psTmplsToFiles {
