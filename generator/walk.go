@@ -71,8 +71,7 @@ func walkFindFs(dest string, t *template.Template, blogProps SU.PropSet) error {
 
 func duit(oldpath, newpath string, t *template.Template, bp SU.PropSet) error {
 
-	content, err := ioutil.ReadFile(oldpath)
-	if err != nil {
+	content, err := ioutil.ReadFile(oldpath); if err != nil {
 		return serrors.Errorf("error reading file %s: %w", oldpath, err)
 	}
 	println("Calling WrapHtmlInMasterPageTemplate:", oldpath, newpath)

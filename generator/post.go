@@ -24,9 +24,9 @@ import (
 // Post holds data for a post.
 type Post struct {
 	// Name      string
-	Dir      *FU.CheckedPath
+	Dir      *FU.BasicPath
 	DirBase	  string
-	File     *FU.CheckedPath
+	File     *FU.BasicPath
 	SU.PropSet
 	ContentMD string
 	CntAsHTML string
@@ -126,36 +126,41 @@ func copyImagesDir(source, destination string) (err error) {
 // post's content Markdown, and the post's content converted to HTML.
 func getPost(path string) (p *Post, e error) {
 	p = new(Post)
-	p.Dir = FU.NewCheckedPath(path)
-	if !(p.Dir.Exists && p.Dir.IsDir) {
+	// p.Dir is the Dirctory of all the files
+	p.Dir = FU.NewBasicPath(path)
+	if !p.Dir.IsOkayDir() { // (p.Dir.Exists && p.Dir.IsDir) {
 		return nil, errors.New("Not a readable directory: " + path)
 	}
-	postFP := FP.Join(path, "post.md")
-	p.File = FU.NewCheckedPath(postFP)
-	if !(p.File.Exists && p.File.IsFile) {
-		return nil, errors.New("Not a readable file: " + postFP)
+	PathOfMD := FP.Join(path, "post.md")
+	// p.File is the Filepath of the "post.md" main blogpost file
+	p.File = FU.NewBasicPath(PathOfMD)
+	if !p.File.IsOkayFile() { // (p.File.Exists && p.File.IsFile) {
+		return nil, errors.New("Not a readable file: " + PathOfMD)
 	}
-	p.File = p.File.LoadFile()
-	if e = p.File.GetError(); e != nil {
-		return nil, serrors.Errorf("Can't load file <%s>: %w", postFP, e)
+	// p.File = p.File.LoadFile()
+	var bb []byte
+	bb, e = ioutil.ReadFile(PathOfMD)
+	if e != nil {
+		return nil, serrors.Errorf("Can't load file <%s>: %w", PathOfMD, e)
 	}
+	ss := string(bb)
 	// println("RAW:", p.File.Raw)
 	// Try to evaluate YAML metadata header
 	// func GetYamlMetadata(instr string) (map[string]interface{}, string, error) {
-	p.PropSet, p.ContentMD, e = SU.GetYamlMetadataAsPropSet(p.File.Raw)
+	p.PropSet, p.ContentMD, e = SU.GetYamlMetadataAsPropSet(ss) // (p.File.Raw)
 	if e != nil {
 		panic("post.go: error from Yaml")
 	}
 	fmt.Printf("##>> getPost: PropSet: %+v \n", p.PropSet)
 	// Replace BlackFriday with Goldmark
 	// html := blackfriday.MarkdownCommon(input)
-	var bb bytes.Buffer
-	if e = goldmark.Convert([]byte(p.ContentMD), &bb); e != nil {
+	var hh bytes.Buffer
+	if e = goldmark.Convert(bb, &hh); e != nil {
   	panic(e)
 	}
-	p.CntAsHTML, e = replaceCodeParts([]byte(bb.String()))
+	p.CntAsHTML, e = replaceCodeParts([]byte(hh.String()))
 	if e != nil {
-		return nil, serrors.Errorf("error during syntax hiliting of %s: %w", postFP, e)
+		return nil, serrors.Errorf("error during syntax hiliting of %s: %w", PathOfMD, e)
 	}
 	return p, nil
 }

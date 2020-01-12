@@ -38,17 +38,17 @@ func Run() {
 	}
 	println("Data source type:", dstype)
 	// Check that arguments are OK
-	var chp_tmpTo, chp_repo *FU.CheckedPath
+	var chp_tmpTo, chp_repo *FU.BasicPath
   var tmpTo string
 	tmpTo = cfgs[0]["tmp"]
-	chp_tmpTo = FU.NewCheckedPath(tmpTo)
-	if chp_tmpTo.Exists && !chp_tmpTo.IsDir {
-		log.Fatal(serrors.Errorf("\"Tmp\" is not a directory: <%s>", tmpTo))
+	chp_tmpTo = FU.NewBasicPath(tmpTo)
+	if chp_tmpTo.Exists && !chp_tmpTo.IsOkayDir() {
+		log.Fatal(serrors.Errorf("\"Tmp\" is not a readable directory: <%s>", tmpTo))
 	}
 	if dstype == "filesystem" {
-		chp_repo = FU.NewCheckedPath(repo)
-		if !(chp_repo.Exists && chp_repo.IsDir) {
-			log.Fatal(serrors.Errorf("HTTP Repo is not a directory: <%s>", repo))
+		chp_repo = FU.NewBasicPath(repo)
+		if !(chp_repo.Exists && chp_repo.IsOkayDir()) {
+			log.Fatal(serrors.Errorf("HTTP Repo is not a readable directory: <%s>", repo))
 		}
 	}
 	ds := datasource.New(dstype)
